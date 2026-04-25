@@ -1,1 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My-Easytransport.com | Car Rental with Driver</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+:root {
+  --navy: #0f2044;
+  --navy2: #1a3060;
+  --blue: #2248a8;
+  --blue2: #2f5fd4;
+  --sky: #4a90e2;
+  --sky2: #e8f0fe;
+  --mint: #00c896;
+  --gold: #f5a623;
+  --bg: #f4f7ff;
+  --surface: #ffffff;
+  --surface2: #f0f4ff;
+  --border: #dde5f8;
+  --text: #0f2044;
+  --text2: #3a4a6b;
+  --muted: #7a8aaa;
+  --wa1: #25d366;
+  --wa2: #128c7e;
+  --danger: #ef4444;
+  --success: #10b981;
+  --r: 14px;
+  --shadow: 0 4px 24px rgba(34,72,168,0.10);
+  --shadow2: 0 8px 40px rgba(34,72,168,0.16);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 0% 0%, rgba(34,72,168,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 100% 100%, rgba(0,200,150,0.05) 0%, transparent 50%);
+}
+
+/* ─── HERO ─────────────────────────────────── */
+.hero {
+  background: linear-gradient(145deg, var(--navy) 0%, var(--navy2) 40%, var(--blue) 100%);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 80% 20%, rgba(74,144,226,0.25) 0%, transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(0,200,150,0.12) 0%, transparent 40%);
+}
+.hero-dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  padding: 28px 20px 24px;
+  text-align: center;
+}
+.hero-logo {
+  font-family: 'Fraunces', serif;
+  font-size: 1.6rem;
+  color: #fff;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+.hero-logo span { color: var(--mint); }
+.hero-tagline {
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.hero-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.7rem;
+  color: #fff;
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+.hero-title em { color: var(--mint); font-style: italic; }
+.hero-sub {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 20px;
+}
+.hero-badges {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.hbadge {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.85);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+}
+
+/* ─── DB STATUS ─────────────────────────── */
+#db-status {
+  font-size: 0.65rem;
+  text-align: center;
+  padding: 6px;
+  background: rgba(255,255,255,0.85);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  color: var(--muted);
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.dot-on { background: var(--success); box-shadow: 0 0 5px var(--success); }
+.dot-off { background: var(--danger); }
+
+/* ─── ADMIN TAB ───────────────────────── */
+.admin-tab-bar {
+  display: none;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 8px 16px;
+  gap: 8px;
+}
+.admin-tab-bar.show { display: flex; }
+.atab {
+  flex: 1; padding: 10px 8px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.75rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all 0.2s;
+}
+.atab.active {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+}
+
+/* ─── CONTAINER / CARDS ──────────────── */
+.container { max-width: 520px; margin: 0 auto; }
+.card {
+  background: var(--surface);
+  border-radius: var(--r);
+  margin: 14px;
+  display: none;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.35s ease;
+}
+.card.active { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card-body { padding: 20px; }
+
+/* ─── STEPS ──────────────────────────── */
+.step-bar {
+  display: flex;
+  padding: 0 20px;
+  gap: 0;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.step {
+  flex: 1;
+  text-align: center;
+  padding: 12px 4px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  position: relative;
+  transition: color 0.2s;
+}
+.step.done { color: var(--success); }
+.step.active { color: var(--blue); }
+.step::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 10%; right: 10%;
+  height: 2px;
+  background: transparent;
+  border-radius: 2px;
+  transition: background 0.2s;
+}
+.step.active::after { background: var(--blue); }
+.step.done::after { background: var(--success); }
+.step-num {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  margin-bottom: 3px;
+}
+.step.active .step-num { background: var(--blue); color: #fff; }
+.step.done .step-num { background: var(--success); color: #fff; }
+
+/* ─── SECTION TITLE ──────────────────── */
+.stitle {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 800;
+  color: var(--blue);
+  margin: 20px 0 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.stitle::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.stitle:first-child { margin-top: 0; }
+
+/* ─── FORM ELEMENTS ──────────────────── */
+.fg { margin-bottom: 12px; }
+label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+}
+input, select, textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.88rem;
+  background: var(--surface2);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: none;
+}
+input:focus, select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(34,72,168,0.08); background: #fff; }
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%232248a8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 34px;
+}
+.row2 { display: flex; gap: 10px; }
+.row2 > * { flex: 1; }
+
+/* ─── LOCATION CARD PICKER ───────────── */
+.loc-card {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; gap: 12px;
+}
+.loc-card:hover { border-color: var(--blue); background: var(--sky2); }
+.loc-card.selected { border-color: var(--blue); background: var(--sky2); }
+.loc-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.loc-dot.pickup { background: var(--blue); }
+.loc-dot.dropoff { background: var(--mint); }
+.loc-info { flex: 1; }
+.loc-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 700; margin-bottom: 2px; }
+.loc-value { font-size: 0.9rem; font-weight: 700; color: var(--text); }
+.loc-divider {
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin: 6px 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.loc-divider::before, .loc-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ─── VEHICLE CARDS ──────────────────── */
+.vehicle-card {
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  transition: all 0.25s;
+  cursor: pointer;
+}
+.vehicle-card:hover { border-color: var(--blue); box-shadow: var(--shadow2); }
+.vehicle-card.selected { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(34,72,168,0.08); }
+.vehicle-img-wrap {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);
+  height: 170px;
+  position: relative;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.vehicle-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.vehicle-img-placeholder {
+  font-size: 4rem;
+  opacity: 0.4;
+}
+.vehicle-badge-tag {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+}
+.vehicle-selected-badge {
+  position: absolute;
+  top: 10px; left: 10px;
+  background: var(--mint);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: none;
+}
+.vehicle-card.selected .vehicle-selected-badge { display: block; }
+.vehicle-info { padding: 14px; background: #fff; }
+.vehicle-name { font-family: 'Fraunces', serif; font-size: 1.1rem; color: var(--text); font-weight: 700; margin-bottom: 8px; }
+.vehicle-specs { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.vspec {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 0.72rem; color: var(--text2); font-weight: 600;
+}
+.vehicle-price-row {
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.vprice-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.vprice { font-family: 'Fraunces', serif; font-size: 1.4rem; font-weight: 700; color: var(--blue); }
+.vprice span { font-size: 0.7rem; font-weight: 400; color: var(--muted); font-family: 'Plus Jakarta Sans', sans-serif; }
+.vselect-btn {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: background 0.2s;
+}
+.vselect-btn:hover { background: var(--blue2); }
+.vehicle-card.selected .vselect-btn { background: var(--success); }
+
+/* ─── PRICE SUMMARY ──────────────────── */
+.price-summary {
+  background: var(--sky2);
+  border: 1.5px solid rgba(34,72,168,0.15);
+  border-radius: 14px;
+  padding: 18px;
+  margin: 16px 0;
+}
+.ps-title {
+  font-family: 'Fraunces', serif;
+  font-size: 0.95rem;
+  color: var(--blue);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(34,72,168,0.1);
+  display: flex; align-items: center; gap: 8px;
+}
+.ps-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px; font-size: 0.84rem;
+}
+.ps-row span:first-child { color: var(--muted); }
+.ps-row span:last-child { color: var(--text); font-weight: 600; }
+.ps-total {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 12px;
+  background: linear-gradient(135deg, var(--navy), var(--blue));
+  padding: 14px 16px;
+  border-radius: 10px;
+}
+.ps-total span:first-child { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.7); font-weight: 700; }
+.ps-total span:last-child { font-family: 'Fraunces', serif; font-size: 1.5rem; color: #fff; font-weight: 700; }
+.ps-note {
+  background: rgba(245,166,35,0.08);
+  border: 1px solid rgba(245,166,35,0.25);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.72rem;
+  color: #a07000;
+  margin-top: 10px;
+  display: flex; gap: 6px; align-items: flex-start;
+}
+
+/* ─── ADDONS ─────────────────────────── */
+.addon-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.addon-table th { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 700; padding: 6px 0; text-align: left; border-bottom: 1px solid var(--border); }
+.addon-table th:last-child, .addon-table td:last-child { text-align: center; width: 60px; }
+.addon-table td { padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; vertical-align: middle; }
+.addon-name { font-weight: 700; color: var(--text); }
+.addon-desc { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+.addon-price { font-weight: 700; color: var(--blue); font-size: 0.85rem; white-space: nowrap; }
+.qty-input {
+  width: 50px; padding: 6px 8px;
+  text-align: center;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  background: #fff;
+}
+
+/* ─── TERMS & WA BUTTONS ────────────── */
+.terms-box {
+  background: rgba(34,72,168,0.04);
+  border: 1.5px solid rgba(34,72,168,0.12);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+.terms-row { display: flex; align-items: flex-start; gap: 10px; }
+.terms-row input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--blue); flex-shrink: 0; margin-top: 1px; }
+.terms-row label { font-size: 0.78rem; color: var(--text2); font-weight: 400; text-transform: none; letter-spacing: 0; margin: 0; cursor: pointer; line-height: 1.5; }
+.terms-links { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(34,72,168,0.1); display: flex; flex-wrap: wrap; gap: 6px; }
+.tlink { font-size: 0.7rem; color: var(--blue); border: 1px solid rgba(34,72,168,0.25); padding: 3px 10px; border-radius: 20px; text-decoration: none; font-weight: 600; transition: all 0.2s; }
+.tlink:hover { background: rgba(34,72,168,0.06); }
+
+/* ─── BUTTONS ────────────────────────── */
+.btn {
+  border: none; padding: 14px; width: 100%;
+  border-radius: 12px; cursor: pointer;
+  font-size: 0.88rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  text-decoration: none; margin-bottom: 10px; color: white;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: 0.2px; transition: all 0.2s;
+}
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn:active:not(:disabled) { transform: scale(0.98); }
+.btn-primary { background: linear-gradient(135deg, var(--blue), var(--blue2)); box-shadow: 0 4px 14px rgba(34,72,168,0.3); }
+.btn-primary:hover:not(:disabled) { box-shadow: 0 6px 20px rgba(34,72,168,0.4); }
+.btn-outline { background: transparent; border: 2px solid var(--blue); color: var(--blue); }
+.btn-outline:hover { background: var(--sky2); }
+.btn-wa1 { background: linear-gradient(135deg, #25d366, #1da851); box-shadow: 0 4px 14px rgba(37,211,102,0.3); }
+.btn-wa2 { background: linear-gradient(135deg, #128c7e, #0d6e62); box-shadow: 0 4px 14px rgba(18,140,126,0.3); }
+.btn-save { background: linear-gradient(135deg, var(--blue2), var(--blue)); }
+.btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.btn-edit { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.btn-sm { padding: 6px 12px; width: auto; font-size: 0.72rem; margin-bottom: 0; border-radius: 8px; }
+.btn-next { background: linear-gradient(135deg, var(--blue), var(--mint)); box-shadow: 0 4px 14px rgba(34,72,168,0.25); }
+
+/* ─── WA PICKER ──────────────────────── */
+.wa-section { margin-top: 8px; }
+.wa-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); font-weight: 700; margin-bottom: 10px; text-align: center; }
+.wa-grid { display: flex; gap: 10px; }
+.wa-grid .btn { margin-bottom: 0; }
+
+/* ─── TRUST BADGES ───────────────────── */
+.trust-strip {
+  display: flex; gap: 8px;
+  padding: 14px 20px;
+  background: var(--surface2);
+  border-top: 1px solid var(--border);
+}
+.tbadge {
+  flex: 1; text-align: center;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+.tbadge-icon { font-size: 1.15rem; margin-bottom: 3px; }
+.tbadge-text { font-size: 0.57rem; color: var(--muted); font-weight: 700; }
+
+/* ─── BOTTOM ACTIONS ─────────────────── */
+.bottom-actions {
+  display: flex; gap: 10px;
+  padding: 14px 20px 18px;
+  background: var(--surface2);
+  border-top: 1px solid var(--border);
+}
+.btn-bot {
+  flex: 1; border: none;
+  padding: 12px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  text-decoration: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all 0.2s;
+}
+.btn-bot:active { transform: scale(0.97); }
+.btn-back-main { background: #fff; color: var(--navy); border: 2px solid var(--navy2); }
+.btn-back-main:hover { background: var(--navy); color: #fff; }
+.btn-help { background: linear-gradient(135deg, #25d366, #1da851); color: #fff; box-shadow: 0 4px 10px rgba(37,211,102,0.25); }
+
+/* ─── BOOKING SUMMARY PANEL ──────────── */
+.summary-bar {
+  position: sticky;
+  bottom: 0;
+  background: var(--navy);
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  z-index: 100;
+  border-top: 2px solid var(--blue);
+}
+.summary-bar.show { display: flex; }
+.sb-info { }
+.sb-label { font-size: 0.6rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; }
+.sb-price { font-family: 'Fraunces', serif; font-size: 1.3rem; color: #fff; font-weight: 700; }
+.sb-car { font-size: 0.7rem; color: rgba(255,255,255,0.65); margin-top: 1px; }
+.sb-btn {
+  background: linear-gradient(135deg, var(--mint), #00a87a);
+  color: #fff; border: none;
+  padding: 11px 20px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* ─── MODAL ──────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  display: none; justify-content: center; align-items: center;
+  z-index: 3000; padding: 16px;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 24px;
+  width: 100%; max-width: 420px;
+  max-height: 85vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+.modal-box h3 { font-family: 'Fraunces', serif; color: var(--blue); text-align: center; margin-bottom: 20px; font-size: 1.2rem; }
+.modal-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; }
+.modal-row span:first-child { color: var(--muted); font-weight: 600; flex-shrink: 0; margin-right: 12px; }
+.modal-row span:last-child { color: var(--text); font-weight: 700; text-align: right; }
+.modal-total { background: linear-gradient(135deg, var(--navy), var(--blue)); border-radius: 10px; padding: 14px; margin-top: 14px; display: flex; justify-content: space-between; align-items: center; }
+.modal-total span:first-child { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.65); }
+.modal-total span:last-child { font-family: 'Fraunces', serif; font-size: 1.4rem; color: #fff; font-weight: 700; }
+
+/* ─── ADMIN ──────────────────────────── */
+.admin-header {
+  background: linear-gradient(135deg, var(--sky2), #fff);
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.admin-header h2 { font-family: 'Fraunces', serif; color: var(--blue); font-size: 1.3rem; margin-bottom: 2px; }
+.admin-form-box {
+  background: var(--surface2);
+  border: 1.5px dashed rgba(34,72,168,0.2);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.admin-form-box input, .admin-form-box select, .admin-form-box textarea { margin-bottom: 8px; }
+.admin-item {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.admin-item-info { flex: 1; font-size: 0.8rem; }
+.admin-item-info strong { display: block; color: var(--blue); margin-bottom: 2px; font-size: 0.85rem; }
+.admin-item-info span { color: var(--muted); font-size: 0.72rem; }
+.admin-btns { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* ─── SCROLLBAR ──────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: rgba(34,72,168,0.25); border-radius: 2px; }
+
+/* ─── LOCATION MODAL ─────────────────── */
+.locmodal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); z-index: 2000; align-items: flex-end; justify-content: center; }
+.locmodal.open { display: flex; }
+.locmodal-box { background: #fff; border-radius: 20px 20px 0 0; padding: 20px; width: 100%; max-width: 520px; max-height: 80vh; overflow-y: auto; }
+.locmodal-box h3 { font-family: 'Fraunces', serif; color: var(--blue); margin-bottom: 14px; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; }
+.locmodal-close { cursor: pointer; color: var(--muted); font-size: 1.2rem; background: none; border: none; }
+.loc-search { margin-bottom: 12px; }
+.loc-search input { background: var(--surface2); border-color: var(--border); }
+.loc-section-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; color: var(--muted); margin: 12px 0 6px; display: flex; align-items: center; gap: 6px; }
+.loc-option {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  transition: background 0.15s;
+  display: flex; align-items: center; gap: 10px;
+}
+.loc-option:hover { background: var(--sky2); }
+.loc-option.selected { color: var(--blue); }
+.loc-option .loc-opt-check { color: var(--blue); font-size: 0.8rem; }
+.loc-option .loc-fee { font-size: 0.7rem; color: var(--muted); font-weight: 400; margin-left: auto; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero" id="heroArea" onclick="heroClick()">
+  <div class="hero-dots"></div>
+  <div class="hero-inner">
+    <div class="hero-logo">My-Easy<span>transport</span>.com</div>
+    <div class="hero-tagline">Car Rental with Driver</div>
+    <div class="hero-title">Travel Comfortably,<br><em>Anywhere in Malaysia</em></div>
+    <div class="hero-sub">Professional drivers · Reliable fleet · 24/7 support</div>
+    <div class="hero-badges">
+      <span class="hbadge">🚗 With Driver</span>
+      <span class="hbadge">📍 Doorstep Pickup</span>
+      <span class="hbadge">✅ Insured Fleet</span>
+    </div>
+  </div>
+</div>
+
+<div id="db-status"><span class="dot dot-off" id="dbDot"></span><span id="dbMsg">Connecting...</span></div>
+
+<!-- ADMIN TABS -->
+<div class="admin-tab-bar" id="adminTabBar">
+  <button class="atab active" onclick="switchTab('booking')">📋 Booking</button>
+  <button class="atab" onclick="switchTab('admin')">⚙️ Admin</button>
+</div>
+
+<div class="container">
+
+  <!-- ══ BOOKING CARD ══ -->
+  <div class="card active" id="bookingCard">
+
+    <!-- STEPS -->
+    <div class="step-bar">
+      <div class="step active" id="step1El"><div class="step-num">1</div>Details</div>
+      <div class="step" id="step2El"><div class="step-num">2</div>Vehicle</div>
+      <div class="step" id="step3El"><div class="step-num">3</div>Confirm</div>
+    </div>
+
+    <!-- STEP 1: TRIP DETAILS -->
+    <div class="card-body" id="s1">
+      <div class="stitle">📅 Trip Details</div>
+
+      <!-- Pickup Location -->
+      <div class="fg">
+        <label>Pickup Location</label>
+        <div class="loc-card" id="pickupCard" onclick="openLocModal('pickup')">
+          <div class="loc-dot pickup"></div>
+          <div class="loc-info">
+            <div class="loc-label">Starting Point</div>
+            <div class="loc-value" id="pickupDisplay">Tap to select location</div>
+          </div>
+          <span style="color:var(--blue);font-size:1rem">›</span>
+        </div>
+      </div>
+
+      <div class="loc-divider">↓ to</div>
+
+      <!-- Drop-off Location -->
+      <div class="fg">
+        <label>Drop-off Location</label>
+        <div class="loc-card" id="dropoffCard" onclick="openLocModal('dropoff')">
+          <div class="loc-dot dropoff"></div>
+          <div class="loc-info">
+            <div class="loc-label">Destination</div>
+            <div class="loc-value" id="dropoffDisplay">Tap to select location</div>
+          </div>
+          <span style="color:var(--mint);font-size:1rem">›</span>
+        </div>
+      </div>
+
+      <div class="stitle">🗓 Schedule</div>
+      <div class="row2">
+        <div class="fg">
+          <label>Pickup Date</label>
+          <input type="date" id="pickupDate" onchange="validateStep1()">
+        </div>
+        <div class="fg">
+          <label>Pickup Time</label>
+          <input type="time" id="pickupTime" value="10:00" onchange="validateStep1()">
+        </div>
+      </div>
+
+      <div class="stitle">👤 Passenger Info</div>
+      <div class="fg">
+        <label>Full Name</label>
+        <input type="text" id="custName" placeholder="Your full name" oninput="validateStep1()">
+      </div>
+      <div class="row2">
+        <div class="fg">
+          <label>Phone</label>
+          <input type="tel" id="custPhone" placeholder="+60..." oninput="validateStep1()">
+        </div>
+        <div class="fg">
+          <label>Passengers</label>
+          <select id="custPax" onchange="validateStep1()">
+            <option value="">Select</option>
+            <option>1</option><option>2</option><option>3</option>
+            <option>4</option><option>5</option><option>6</option>
+            <option>7</option><option>8</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Special Requests (Optional)</label>
+        <input type="text" id="custNote" placeholder="e.g. Airport meet & greet, child seat...">
+      </div>
+
+      <button class="btn btn-next" id="btnNext1" onclick="goStep(2)" disabled>
+        Continue — Select Vehicle →
+      </button>
+    </div>
+
+    <!-- STEP 2: VEHICLE -->
+    <div class="card-body" id="s2" style="display:none">
+      <div class="stitle">🚗 Select Your Vehicle</div>
+      <div id="vehicleList">
+        <div style="text-align:center;padding:30px;color:var(--muted)">Loading vehicles...</div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="btn btn-outline" style="flex:1" onclick="goStep(1)">← Back</button>
+        <button class="btn btn-next" style="flex:2" id="btnNext2" onclick="goStep(3)" disabled>Review Booking →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: CONFIRM -->
+    <div class="card-body" id="s3" style="display:none">
+      <div class="stitle">📋 Booking Summary</div>
+
+      <!-- Summary rows -->
+      <div class="price-summary">
+        <div class="ps-title">🧾 Trip Estimate</div>
+        <div class="ps-row"><span>From</span><span id="sumFrom">—</span></div>
+        <div class="ps-row"><span>To</span><span id="sumTo">—</span></div>
+        <div class="ps-row"><span>Date & Time</span><span id="sumDate">—</span></div>
+        <div class="ps-row"><span>Passengers</span><span id="sumPax">—</span></div>
+        <div class="ps-row"><span>Vehicle</span><span id="sumCar">—</span></div>
+        <div class="ps-row"><span>Base Fare</span><span id="sumBase">—</span></div>
+        <div class="ps-row"><span>Location Fee</span><span id="sumLocFee">—</span></div>
+        <div id="addonSumRows"></div>
+        <div class="ps-total"><span>Grand Total</span><span id="sumTotal">—</span></div>
+        <div class="ps-note">⚠️ This is an estimated fare. Final amount will be confirmed by our team upon booking.</div>
+      </div>
+
+      <!-- Add-ons -->
+      <div class="stitle" id="addonTitle">➕ Add-ons</div>
+      <div id="addonSection">
+        <table class="addon-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th style="text-align:right">Price</th>
+              <th>Qty</th>
+            </tr>
+          </thead>
+          <tbody id="addonRows"></tbody>
+        </table>
+      </div>
+
+      <!-- Terms -->
+      <div class="stitle" style="margin-top:18px">📄 Terms & Conditions</div>
+      <div class="terms-box">
+        <div class="terms-row">
+          <input type="checkbox" id="termsChk" onchange="toggleWABtns()">
+          <label for="termsChk" id="termsText">I agree to the Terms & Conditions of My-Easytransport.com</label>
+        </div>
+        <div class="terms-links" id="termsLinks"></div>
+      </div>
+
+      <!-- WhatsApp Section -->
+      <div class="wa-section">
+        <div class="wa-label">📲 Book via WhatsApp</div>
+        <div class="wa-grid">
+          <button class="btn btn-wa1" id="btnWA1" onclick="sendWA(1)" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Agent 1
+          </button>
+          <button class="btn btn-wa2" id="btnWA2" onclick="sendWA(2)" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Agent 2
+          </button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button class="btn btn-outline" style="flex:1" onclick="goStep(2)">← Back</button>
+      </div>
+    </div>
+
+    <!-- TRUST STRIP -->
+    <div class="trust-strip">
+      <div class="tbadge"><div class="tbadge-icon">🛡️</div><div class="tbadge-text">Insured</div></div>
+      <div class="tbadge"><div class="tbadge-icon">🚗</div><div class="tbadge-text">Pro Driver</div></div>
+      <div class="tbadge"><div class="tbadge-icon">📍</div><div class="tbadge-text">All Malaysia</div></div>
+      <div class="tbadge"><div class="tbadge-icon">🕐</div><div class="tbadge-text">24/7 Support</div></div>
+    </div>
+
+    <!-- BOTTOM ACTIONS -->
+    <div class="bottom-actions">
+      <a href="https://my-easytransport.com" target="_blank" class="btn-bot btn-back-main">← Main Menu</a>
+      <a href="https://wa.me/60182246616" target="_blank" class="btn-bot btn-help">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Need Help?
+      </a>
+    </div>
+  </div>
+
+  <!-- ══ ADMIN CARD ══ -->
+  <div class="card" id="adminCard">
+    <div class="admin-header">
+      <h2>⚙️ Admin Panel</h2>
+      <p style="font-size:0.72rem;color:var(--muted);margin-top:3px">Manage fleet, locations, add-ons, pricing & settings</p>
+    </div>
+    <div class="card-body">
+
+      <!-- VEHICLES -->
+      <div class="stitle">🚗 Vehicles</div>
+      <div class="admin-form-box">
+        <input type="hidden" id="editVehIdx">
+        <input type="text" id="newVehName" placeholder="Vehicle Name (e.g. Toyota Vios)">
+        <input type="number" id="newVehPrice" placeholder="Base Fare (RM)">
+        <input type="text" id="newVehImg" placeholder="Image URL (https://...)">
+        <input type="text" id="newVehType" placeholder="Type tag (e.g. Sedan, MPV, SUV)">
+        <input type="number" id="newVehPax" placeholder="Max Passengers">
+        <button class="btn btn-save" id="btnSaveVeh" onclick="saveVehicle()">💾 Save Vehicle</button>
+      </div>
+      <div id="adminVehList"></div>
+
+      <!-- LOCATIONS -->
+      <div class="stitle">📍 Locations</div>
+      <div class="admin-form-box">
+        <input type="hidden" id="editLocIdx">
+        <input type="text" id="newLocName" placeholder="Location Name">
+        <input type="number" id="newLocFee" placeholder="Additional Fee (RM) — 0 if none">
+        <button class="btn btn-save" id="btnSaveLoc" onclick="saveLocation()">💾 Save Location</button>
+      </div>
+      <div id="adminLocList"></div>
+
+      <!-- ADD-ONS -->
+      <div class="stitle">➕ Add-ons</div>
+      <div class="admin-form-box">
+        <input type="hidden" id="editAddonIdx">
+        <input type="text" id="newAddonName" placeholder="Add-on Name (e.g. Infant Car Seat)">
+        <input type="number" id="newAddonPrice" placeholder="Price per unit (RM)">
+        <input type="text" id="newAddonDesc" placeholder="Short description">
+        <button class="btn btn-save" id="btnSaveAddon" onclick="saveAddon()">💾 Save Add-on</button>
+      </div>
+      <div id="adminAddonList"></div>
+
+      <!-- LINKS -->
+      <div class="stitle">🔗 T&C Links</div>
+      <div class="admin-form-box">
+        <input type="hidden" id="editLinkIdx">
+        <input type="text" id="newLinkName" placeholder="Link Label (e.g. Terms & Conditions)">
+        <input type="text" id="newLinkUrl" placeholder="URL (https://...)">
+        <button class="btn btn-save" id="btnSaveLink" onclick="saveLink()">💾 Save Link</button>
+      </div>
+      <div id="adminLinkList"></div>
+
+      <!-- SETTINGS -->
+      <div class="stitle">⚙️ Settings</div>
+      <div class="fg"><label>WhatsApp Agent 1 (Number)</label><input type="text" id="confWA1" placeholder="60182246616"></div>
+      <div class="fg"><label>WhatsApp Agent 1 (Label)</label><input type="text" id="confWA1Label" placeholder="Agent 1 — e.g. Customer Care"></div>
+      <div class="fg"><label>WhatsApp Agent 2 (Number)</label><input type="text" id="confWA2" placeholder="601110025084"></div>
+      <div class="fg"><label>WhatsApp Agent 2 (Label)</label><input type="text" id="confWA2Label" placeholder="Agent 2 — e.g. Bookings"></div>
+      <div class="fg"><label>Terms Checkbox Text</label><input type="text" id="confTermsText"></div>
+      <button class="btn btn-save" onclick="saveSettings()">💾 Update Settings</button>
+      <button class="btn btn-danger" onclick="location.reload()" style="margin-top:10px">🔄 Refresh App</button>
+    </div>
+  </div>
+
+</div><!-- end container -->
+
+<!-- ══ LOCATION MODAL ══ -->
+<div class="locmodal" id="locModal">
+  <div class="locmodal-box">
+    <h3>
+      <span id="locModalTitle">Select Location</span>
+      <button class="locmodal-close" onclick="closeLocModal()">✕</button>
+    </h3>
+    <div class="loc-search">
+      <input type="text" id="locSearch" placeholder="🔍 Search location..." oninput="filterLocs()">
+    </div>
+    <div id="locList"></div>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="confirmLoc()">OK — Confirm Location</button>
+  </div>
+</div>
+
+<!-- ══ ADMIN LOGIN MODAL ══ -->
+<div class="modal-overlay" id="adminLoginModal">
+  <div class="modal-box" style="max-width:340px">
+    <h3>🔐 Admin Access</h3>
+    <div class="fg" style="margin-bottom:14px">
+      <label>Password</label>
+      <input type="password" id="adminPassInput" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')checkAdminPass()">
+    </div>
+    <button class="btn btn-primary" onclick="checkAdminPass()">Unlock Admin</button>
+    <button class="btn btn-outline" style="margin-top:6px" onclick="closeAdminLogin()">Cancel</button>
+    <p id="adminPassErr" style="color:var(--danger);font-size:0.75rem;text-align:center;margin-top:8px;display:none">Incorrect password.</p>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// FIREBASE CONFIG — replace with your own
+// ══════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyBJa05_OVkBGWrwaFFNFGop2Sp4w4eM_J0",
+  authDomain: "car-rental-system-5f0f2.firebaseapp.com",
+  databaseURL: "https://car-rental-system-5f0f2-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "car-rental-system-5f0f2",
+  storageBucket: "car-rental-system-5f0f2.firebasestorage.app",
+  messagingSenderId: "772009970033",
+  appId: "1:772009970033:web:30c1c2f52111cc94aced0"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const ADMIN_PASS = "eztransport2024";
+const DEFAULT_WA1 = "60182246616";
+const DEFAULT_WA2 = "601110025084";
+
+// ── State ──
+let vehicles = {}, locations = {}, addons = {}, links = {}, settings = {};
+let selectedPickup = null, selectedDropoff = null;
+let selectedVehicle = null;
+let locTarget = null; // 'pickup' or 'dropoff'
+let addonQtys = {};
+let adminUnlocked = false;
+let heroClicks = 0, heroTimer = null;
+let currentStep = 1;
+
+// ── Firebase Listeners ──
+function initApp() {
+  db.ref('ez_locations').on('value', snap => {
+    locations = snap.val() || {};
+    renderAdminLocs();
+  });
+  db.ref('ez_vehicles').on('value', snap => {
+    vehicles = snap.val() || {};
+    renderVehicles();
+    renderAdminVehs();
+  });
+  db.ref('ez_addons').on('value', snap => {
+    addons = snap.val() || {};
+    renderAdminAddons();
+    renderAddonRows();
+  });
+  db.ref('ez_links').on('value', snap => {
+    links = snap.val() || {};
+    renderTermsLinks();
+    renderAdminLinks();
+  });
+  db.ref('ez_settings').on('value', snap => {
+    settings = snap.val() || {
+      wa1: DEFAULT_WA1, wa1Label: 'Agent 1',
+      wa2: DEFAULT_WA2, wa2Label: 'Agent 2',
+      termsText: 'I agree to the Terms & Conditions of My-Easytransport.com'
+    };
+    applySettings();
+  });
+
+  // DB status
+  db.ref('.info/connected').on('value', snap => {
+    const on = snap.val();
+    document.getElementById('dbDot').className = 'dot ' + (on ? 'dot-on' : 'dot-off');
+    document.getElementById('dbMsg').textContent = on ? 'Connected to database' : 'Offline — retrying...';
+  });
+}
+
+function applySettings() {
+  document.getElementById('confWA1').value = settings.wa1 || DEFAULT_WA1;
+  document.getElementById('confWA1Label').value = settings.wa1Label || 'Agent 1';
+  document.getElementById('confWA2').value = settings.wa2 || DEFAULT_WA2;
+  document.getElementById('confWA2Label').value = settings.wa2Label || 'Agent 2';
+  document.getElementById('confTermsText').value = settings.termsText || '';
+  document.getElementById('termsText').textContent = settings.termsText || 'I agree to the Terms & Conditions.';
+  // Update WA button labels
+  document.getElementById('btnWA1').lastChild.textContent = ' ' + (settings.wa1Label || 'Agent 1');
+  document.getElementById('btnWA2').lastChild.textContent = ' ' + (settings.wa2Label || 'Agent 2');
+}
+
+// ── STEPS ──────────────────────────────────────
+function goStep(n) {
+  if (n === 2 && !validateStep1()) return;
+  if (n === 3) buildSummary();
+  currentStep = n;
+  document.getElementById('s1').style.display = n === 1 ? '' : 'none';
+  document.getElementById('s2').style.display = n === 2 ? '' : 'none';
+  document.getElementById('s3').style.display = n === 3 ? '' : 'none';
+  ['step1El','step2El','step3El'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    el.className = 'step' + (i+1 < n ? ' done' : i+1 === n ? ' active' : '');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── STEP 1 VALIDATION ──────────────────────────
+function validateStep1() {
+  const ok = selectedPickup && selectedDropoff &&
+    document.getElementById('pickupDate').value &&
+    document.getElementById('custName').value.trim() &&
+    document.getElementById('custPhone').value.trim() &&
+    document.getElementById('custPax').value;
+  document.getElementById('btnNext1').disabled = !ok;
+  return ok;
+}
+
+// ── LOCATION MODAL ─────────────────────────────
+function openLocModal(target) {
+  locTarget = target;
+  document.getElementById('locModalTitle').textContent = target === 'pickup' ? 'Select Pickup Location' : 'Select Drop-off Location';
+  document.getElementById('locSearch').value = '';
+  renderLocOptions();
+  document.getElementById('locModal').classList.add('open');
+}
+function closeLocModal() {
+  document.getElementById('locModal').classList.remove('open');
+}
+function filterLocs() {
+  renderLocOptions(document.getElementById('locSearch').value.toLowerCase());
+}
+function renderLocOptions(filter = '') {
+  const locs = Object.entries(locations);
+  const current = locTarget === 'pickup' ? selectedPickup : selectedDropoff;
+  const filtered = locs.filter(([k,v]) => v.name.toLowerCase().includes(filter));
+  document.getElementById('locList').innerHTML = filtered.length === 0
+    ? '<p style="color:var(--muted);font-size:0.82rem;padding:10px 0">No locations found.</p>'
+    : filtered.map(([k,v]) => `
+      <div class="loc-option ${current===k?'selected':''}" onclick="selectLoc('${k}')">
+        ${current===k ? '<span class="loc-opt-check">✓</span>' : '<span style="width:14px;display:inline-block"></span>'}
+        <span style="flex:1">${v.name}</span>
+        ${parseFloat(v.fee||0)>0 ? `<span class="loc-fee">+RM ${parseFloat(v.fee).toFixed(2)}</span>` : ''}
+      </div>`).join('');
+}
+function selectLoc(key) {
+  if (locTarget === 'pickup') selectedPickup = key;
+  else selectedDropoff = key;
+  renderLocOptions(document.getElementById('locSearch').value.toLowerCase());
+}
+function confirmLoc() {
+  const sel = locTarget === 'pickup' ? selectedPickup : selectedDropoff;
+  if (!sel) { alert('Please select a location.'); return; }
+  const loc = locations[sel];
+  if (locTarget === 'pickup') {
+    document.getElementById('pickupDisplay').textContent = loc.name;
+    document.getElementById('pickupCard').classList.add('selected');
+  } else {
+    document.getElementById('dropoffDisplay').textContent = loc.name;
+    document.getElementById('dropoffCard').classList.add('selected');
+  }
+  closeLocModal();
+  validateStep1();
+}
+
+// ── VEHICLES ───────────────────────────────────
+function renderVehicles() {
+  const vehs = Object.entries(vehicles);
+  if (!vehs.length) {
+    document.getElementById('vehicleList').innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px">No vehicles added yet.</p>';
+    return;
+  }
+  document.getElementById('vehicleList').innerHTML = vehs.map(([k,v]) => `
+    <div class="vehicle-card ${selectedVehicle===k?'selected':''}" id="vcard_${k}" onclick="selectVehicle('${k}')">
+      <div class="vehicle-img-wrap">
+        ${v.img ? `<img src="${v.img}" class="vehicle-img" onerror="this.style.display='none'">` : `<div class="vehicle-img-placeholder">🚗</div>`}
+        ${v.type ? `<div class="vehicle-badge-tag">${v.type}</div>` : ''}
+        <div class="vehicle-selected-badge">✓ Selected</div>
+      </div>
+      <div class="vehicle-info">
+        <div class="vehicle-name">${v.name}</div>
+        <div class="vehicle-specs">
+          ${v.pax ? `<div class="vspec">👤 Up to ${v.pax} pax</div>` : ''}
+          ${v.type ? `<div class="vspec">🏷️ ${v.type}</div>` : ''}
+          <div class="vspec">✅ With Driver</div>
+        </div>
+        <div class="vehicle-price-row">
+          <div>
+            <div class="vprice-label">Starting From</div>
+            <div class="vprice">MYR ${parseFloat(v.price).toFixed(2)} <span>/trip</span></div>
+          </div>
+          <button class="vselect-btn" onclick="selectVehicle('${k}');event.stopPropagation()">
+            ${selectedVehicle===k ? '✓ Selected' : 'SELECT'}
+          </button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function selectVehicle(key) {
+  selectedVehicle = key;
+  renderVehicles();
+  document.getElementById('btnNext2').disabled = false;
+}
+
+// ── ADDON ROWS ─────────────────────────────────
+function renderAddonRows() {
+  const rows = Object.entries(addons);
+  if (!rows.length) {
+    document.getElementById('addonSection').innerHTML = '<p style="color:var(--muted);font-size:0.8rem">No add-ons configured.</p>';
+    return;
+  }
+  document.getElementById('addonRows').innerHTML = rows.map(([k,v]) => `
+    <tr>
+      <td><div class="addon-name">${v.name}</div><div class="addon-desc">${v.desc||''}</div></td>
+      <td style="text-align:right"><div class="addon-price">RM ${parseFloat(v.price).toFixed(2)}</div></td>
+      <td><input type="number" class="qty-input" id="qty_${k}" value="${addonQtys[k]||0}" min="0" max="10" onchange="updateAddonQty('${k}',this.value)"></td>
+    </tr>`).join('');
+}
+
+function updateAddonQty(key, val) {
+  addonQtys[key] = parseInt(val) || 0;
+  updateTotal();
+}
+
+// ── CALCULATE TOTAL ────────────────────────────
+function calcTotal() {
+  const veh = selectedVehicle ? vehicles[selectedVehicle] : null;
+  const base = veh ? parseFloat(veh.price) : 0;
+  const pu = selectedPickup ? parseFloat(locations[selectedPickup]?.fee || 0) : 0;
+  const do_ = selectedDropoff ? parseFloat(locations[selectedDropoff]?.fee || 0) : 0;
+  const locFee = pu + do_;
+  let addonTotal = 0;
+  Object.entries(addonQtys).forEach(([k,q]) => {
+    if (addons[k] && q > 0) addonTotal += parseFloat(addons[k].price) * q;
+  });
+  return { base, locFee, addonTotal, grand: base + locFee + addonTotal };
+}
+function updateTotal() {
+  const t = calcTotal();
+  // Update summary if on step 3
+  if (currentStep === 3) buildSummary();
+}
+
+// ── BUILD SUMMARY ──────────────────────────────
+function buildSummary() {
+  const veh = selectedVehicle ? vehicles[selectedVehicle] : null;
+  const pu = selectedPickup ? locations[selectedPickup] : null;
+  const dof = selectedDropoff ? locations[selectedDropoff] : null;
+  const d = document.getElementById('pickupDate').value;
+  const t = document.getElementById('pickupTime').value;
+  const t_ = calcTotal();
+
+  document.getElementById('sumFrom').textContent = pu ? pu.name : '—';
+  document.getElementById('sumTo').textContent = dof ? dof.name : '—';
+  document.getElementById('sumDate').textContent = d && t ? `${d} at ${t}` : '—';
+  document.getElementById('sumPax').textContent = document.getElementById('custPax').value || '—';
+  document.getElementById('sumCar').textContent = veh ? veh.name : '—';
+  document.getElementById('sumBase').textContent = `MYR ${t_.base.toFixed(2)}`;
+  const puFee = selectedPickup ? parseFloat(locations[selectedPickup]?.fee||0) : 0;
+  const doFee = selectedDropoff ? parseFloat(locations[selectedDropoff]?.fee||0) : 0;
+  document.getElementById('sumLocFee').textContent = `MYR ${t_.locFee.toFixed(2)}` + (t_.locFee > 0 ? ` (Pickup: ${puFee.toFixed(2)} + Drop-off: ${doFee.toFixed(2)})` : '');
+
+  // Addon summary rows
+  let aRows = '';
+  Object.entries(addonQtys).forEach(([k,q]) => {
+    if (addons[k] && q > 0) {
+      aRows += `<div class="ps-row"><span>${addons[k].name} ×${q}</span><span>MYR ${(parseFloat(addons[k].price)*q).toFixed(2)}</span></div>`;
+    }
+  });
+  document.getElementById('addonSumRows').innerHTML = aRows;
+  document.getElementById('sumTotal').textContent = `MYR ${t_.grand.toFixed(2)}`;
+  renderAddonRows();
+}
+
+// ── TERMS & WA ─────────────────────────────────
+function toggleWABtns() {
+  const c = document.getElementById('termsChk').checked;
+  document.getElementById('btnWA1').disabled = !c;
+  document.getElementById('btnWA2').disabled = !c;
+}
+function renderTermsLinks() {
+  const html = Object.entries(links).map(([k,v]) =>
+    `<a href="${v.url}" target="_blank" class="tlink">📄 ${v.name}</a>`).join('');
+  document.getElementById('termsLinks').innerHTML = html;
+}
+
+// ── WHATSAPP ───────────────────────────────────
+function sendWA(agent) {
+  const num = agent === 1 ? (settings.wa1||DEFAULT_WA1) : (settings.wa2||DEFAULT_WA2);
+  const veh = selectedVehicle ? vehicles[selectedVehicle] : null;
+  const pu = selectedPickup ? locations[selectedPickup] : null;
+  const dof = selectedDropoff ? locations[selectedDropoff] : null;
+  const t_ = calcTotal();
+  let addonList = '';
+  Object.entries(addonQtys).forEach(([k,q]) => {
+    if (addons[k] && q > 0) addonList += `\n• ${addons[k].name} ×${q} = MYR ${(parseFloat(addons[k].price)*q).toFixed(2)}`;
+  });
+
+  const msg = `🚗 *NEW BOOKING — My-Easytransport.com*
+
+👤 *Passenger:* ${document.getElementById('custName').value}
+📞 *Phone:* ${document.getElementById('custPhone').value}
+👥 *Passengers:* ${document.getElementById('custPax').value}
+
+📍 *Pickup:* ${pu?.name||'N/A'}
+🏁 *Drop-off:* ${dof?.name||'N/A'}
+📅 *Date & Time:* ${document.getElementById('pickupDate').value} at ${document.getElementById('pickupTime').value}
+
+🚘 *Vehicle:* ${veh?.name||'N/A'}
+
+💰 *Fare Breakdown:*
+• Base Fare: MYR ${t_.base.toFixed(2)}
+• Location Fee: MYR ${t_.locFee.toFixed(2)}${addonList}
+• *TOTAL: MYR ${t_.grand.toFixed(2)}*
+
+📝 *Notes:* ${document.getElementById('custNote').value||'None'}
+
+_Booking via My-Easytransport.com_`;
+
+  window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// ── ADMIN LOGIN ────────────────────────────────
+let heroCount = 0, heroT = null;
+function heroClick() {
+  heroCount++;
+  clearTimeout(heroT);
+  heroT = setTimeout(() => { heroCount = 0; }, 2000);
+  if (heroCount >= 5) {
+    heroCount = 0;
+    if (adminUnlocked) return;
+    document.getElementById('adminLoginModal').classList.add('open');
+    document.getElementById('adminPassInput').value = '';
+    document.getElementById('adminPassErr').style.display = 'none';
+    setTimeout(() => document.getElementById('adminPassInput').focus(), 100);
+  }
+}
+function checkAdminPass() {
+  if (document.getElementById('adminPassInput').value === ADMIN_PASS) {
+    adminUnlocked = true;
+    document.getElementById('adminLoginModal').classList.remove('open');
+    document.getElementById('adminTabBar').classList.add('show');
+  } else {
+    document.getElementById('adminPassErr').style.display = 'block';
+  }
+}
+function closeAdminLogin() { document.getElementById('adminLoginModal').classList.remove('open'); }
+
+function switchTab(tab) {
+  document.querySelectorAll('.atab').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('bookingCard').classList.toggle('active', tab==='booking');
+  document.getElementById('adminCard').classList.toggle('active', tab==='admin');
+}
+
+// ── ADMIN CRUD — VEHICLES ──────────────────────
+function saveVehicle() {
+  const idx = document.getElementById('editVehIdx').value;
+  const name = document.getElementById('newVehName').value.trim();
+  const price = parseFloat(document.getElementById('newVehPrice').value);
+  const img = document.getElementById('newVehImg').value.trim();
+  const type = document.getElementById('newVehType').value.trim();
+  const pax = document.getElementById('newVehPax').value;
+  if (!name || isNaN(price)) return alert('Please enter vehicle name and price.');
+  const ref = idx ? db.ref('ez_vehicles/'+idx) : db.ref('ez_vehicles').push();
+  ref.set({ name, price, img, type, pax });
+  clearVehForm();
+}
+function clearVehForm() {
+  ['editVehIdx','newVehName','newVehPrice','newVehImg','newVehType','newVehPax'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('btnSaveVeh').textContent = '💾 Save Vehicle';
+}
+function editVehicle(k) {
+  const v = vehicles[k];
+  document.getElementById('editVehIdx').value = k;
+  document.getElementById('newVehName').value = v.name;
+  document.getElementById('newVehPrice').value = v.price;
+  document.getElementById('newVehImg').value = v.img||'';
+  document.getElementById('newVehType').value = v.type||'';
+  document.getElementById('newVehPax').value = v.pax||'';
+  document.getElementById('btnSaveVeh').textContent = '✏️ Update Vehicle';
+}
+function deleteVehicle(k) { if(confirm('Delete this vehicle?')) db.ref('ez_vehicles/'+k).remove(); }
+function renderAdminVehs() {
+  document.getElementById('adminVehList').innerHTML = Object.entries(vehicles).map(([k,v]) => `
+    <div class="admin-item">
+      <div class="admin-item-info">
+        <strong>🚗 ${v.name}</strong>
+        <span>RM ${parseFloat(v.price).toFixed(2)} | ${v.type||'N/A'} | ${v.pax||'?'} pax</span>
+      </div>
+      <div class="admin-btns">
+        <button class="btn btn-edit btn-sm" onclick="editVehicle('${k}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteVehicle('${k}')">🗑️</button>
+      </div>
+    </div>`).join('') || '<p style="color:var(--muted);font-size:0.8rem">No vehicles yet.</p>';
+}
+
+// ── ADMIN CRUD — LOCATIONS ─────────────────────
+function saveLocation() {
+  const idx = document.getElementById('editLocIdx').value;
+  const name = document.getElementById('newLocName').value.trim();
+  const fee = parseFloat(document.getElementById('newLocFee').value)||0;
+  if (!name) return alert('Please enter a location name.');
+  const ref = idx ? db.ref('ez_locations/'+idx) : db.ref('ez_locations').push();
+  ref.set({ name, fee });
+  clearLocForm();
+}
+function clearLocForm() {
+  ['editLocIdx','newLocName','newLocFee'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('btnSaveLoc').textContent = '💾 Save Location';
+}
+function editLocation(k) {
+  const v = locations[k];
+  document.getElementById('editLocIdx').value = k;
+  document.getElementById('newLocName').value = v.name;
+  document.getElementById('newLocFee').value = v.fee||0;
+  document.getElementById('btnSaveLoc').textContent = '✏️ Update Location';
+}
+function deleteLocation(k) { if(confirm('Delete this location?')) db.ref('ez_locations/'+k).remove(); }
+function renderAdminLocs() {
+  document.getElementById('adminLocList').innerHTML = Object.entries(locations).map(([k,v]) => `
+    <div class="admin-item">
+      <div class="admin-item-info">
+        <strong>📍 ${v.name}</strong>
+        <span>Fee: RM ${parseFloat(v.fee||0).toFixed(2)}</span>
+      </div>
+      <div class="admin-btns">
+        <button class="btn btn-edit btn-sm" onclick="editLocation('${k}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteLocation('${k}')">🗑️</button>
+      </div>
+    </div>`).join('') || '<p style="color:var(--muted);font-size:0.8rem">No locations yet.</p>';
+}
+
+// ── ADMIN CRUD — ADD-ONS ───────────────────────
+function saveAddon() {
+  const idx = document.getElementById('editAddonIdx').value;
+  const name = document.getElementById('newAddonName').value.trim();
+  const price = parseFloat(document.getElementById('newAddonPrice').value);
+  const desc = document.getElementById('newAddonDesc').value.trim();
+  if (!name || isNaN(price)) return alert('Please enter add-on name and price.');
+  const ref = idx ? db.ref('ez_addons/'+idx) : db.ref('ez_addons').push();
+  ref.set({ name, price, desc });
+  clearAddonForm();
+}
+function clearAddonForm() {
+  ['editAddonIdx','newAddonName','newAddonPrice','newAddonDesc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('btnSaveAddon').textContent = '💾 Save Add-on';
+}
+function editAddon(k) {
+  const v = addons[k];
+  document.getElementById('editAddonIdx').value = k;
+  document.getElementById('newAddonName').value = v.name;
+  document.getElementById('newAddonPrice').value = v.price;
+  document.getElementById('newAddonDesc').value = v.desc||'';
+  document.getElementById('btnSaveAddon').textContent = '✏️ Update Add-on';
+}
+function deleteAddon(k) { if(confirm('Delete this add-on?')) db.ref('ez_addons/'+k).remove(); }
+function renderAdminAddons() {
+  document.getElementById('adminAddonList').innerHTML = Object.entries(addons).map(([k,v]) => `
+    <div class="admin-item">
+      <div class="admin-item-info">
+        <strong>➕ ${v.name}</strong>
+        <span>RM ${parseFloat(v.price).toFixed(2)} | ${v.desc||''}</span>
+      </div>
+      <div class="admin-btns">
+        <button class="btn btn-edit btn-sm" onclick="editAddon('${k}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteAddon('${k}')">🗑️</button>
+      </div>
+    </div>`).join('') || '<p style="color:var(--muted);font-size:0.8rem">No add-ons yet.</p>';
+}
+
+// ── ADMIN CRUD — LINKS ─────────────────────────
+function saveLink() {
+  const idx = document.getElementById('editLinkIdx').value;
+  const name = document.getElementById('newLinkName').value.trim();
+  const url = document.getElementById('newLinkUrl').value.trim();
+  if (!name || !url) return alert('Please enter link name and URL.');
+  const ref = idx ? db.ref('ez_links/'+idx) : db.ref('ez_links').push();
+  ref.set({ name, url });
+  clearLinkForm();
+}
+function clearLinkForm() {
+  ['editLinkIdx','newLinkName','newLinkUrl'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('btnSaveLink').textContent = '💾 Save Link';
+}
+function editLink(k) {
+  const v = links[k];
+  document.getElementById('editLinkIdx').value = k;
+  document.getElementById('newLinkName').value = v.name;
+  document.getElementById('newLinkUrl').value = v.url;
+  document.getElementById('btnSaveLink').textContent = '✏️ Update Link';
+}
+function deleteLink(k) { if(confirm('Delete this link?')) db.ref('ez_links/'+k).remove(); }
+function renderAdminLinks() {
+  document.getElementById('adminLinkList').innerHTML = Object.entries(links).map(([k,v]) => `
+    <div class="admin-item">
+      <div class="admin-item-info">
+        <strong>🔗 ${v.name}</strong>
+        <span>${v.url}</span>
+      </div>
+      <div class="admin-btns">
+        <button class="btn btn-edit btn-sm" onclick="editLink('${k}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteLink('${k}')">🗑️</button>
+      </div>
+    </div>`).join('') || '<p style="color:var(--muted);font-size:0.8rem">No links yet.</p>';
+}
+
+// ── SAVE SETTINGS ──────────────────────────────
+function saveSettings() {
+  db.ref('ez_settings').set({
+    wa1: document.getElementById('confWA1').value.trim(),
+    wa1Label: document.getElementById('confWA1Label').value.trim(),
+    wa2: document.getElementById('confWA2').value.trim(),
+    wa2Label: document.getElementById('confWA2Label').value.trim(),
+    termsText: document.getElementById('confTermsText').value.trim()
+  });
+  alert('✅ Settings saved!');
+}
+
+// ── INIT ───────────────────────────────────────
+window.onload = initApp;
+</script>
+</body>
+</html>
 
