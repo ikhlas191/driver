@@ -1,7 +1,3 @@
-<!-- EDITED VERSION: FINAL CONFIRMED -->
-<!-- 1) Admin password updated -->
-<!-- 2) ✅ SINGLE WhatsApp button (auto round-robin, customer tidak pilih agent) -->
-<!-- 3) ✅ Max passenger configurable dari backend (default 16) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,20 +5,961 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My-Easytransport.com | Car Rental with Driver</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-
-<!-- ✅ FIX: Firebase scripts dimuat dengan betul -->
-https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+<style>
+:root {
+  --ink: #0a0f1e;
+  --ink-mid: #2d3650;
+  --ink-soft: #6b7694;
+  --gold: #c9a84c;
+  --gold-light: #e8c97a;
+  --gold-pale: #fdf6e3;
+  --cream: #fafaf7;
+  --white: #ffffff;
+  --border: #e8e8e0;
+  --border-dark: #d0cfc4;
+  --red: #e03434;
+  --green: #1a7a4a;
+  --blue: #1a4fa0;
+  --shadow-sm: 0 2px 8px rgba(10,15,30,0.07);
+  --shadow-md: 0 8px 32px rgba(10,15,30,0.11);
+  --shadow-lg: 0 20px 60px rgba(10,15,30,0.15);
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HERO HEADER ── */
+.hero {
+  background: var(--ink);
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 50%, rgba(201,168,76,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 80% at 10% 80%, rgba(201,168,76,0.06) 0%, transparent 50%);
+}
+.hero-lines {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+.hero-inner {
+  position: relative; z-index: 2;
+  max-width: 900px; margin: 0 auto;
+  padding: 48px 24px 52px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 32px; flex-wrap: wrap;
+}
+.hero-brand {
+  cursor: pointer;
+  user-select: none;
+}
+.hero-logo-row {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 10px;
+}
+.hero-icon {
+  width: 52px; height: 52px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem;
+  box-shadow: 0 4px 16px rgba(201,168,76,0.35);
+  flex-shrink: 0;
+}
+.hero-name {
+  font-family: 'Fraunces', serif;
+  font-size: 1.55rem;
+  color: var(--white);
+  line-height: 1.1;
+  font-weight: 700;
+}
+.hero-name span { color: var(--gold-light); font-style: italic; font-weight: 400; }
+.hero-tagline {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.hero-badges {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.badge {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7);
+  padding: 6px 14px; border-radius: 30px;
+  font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.5px;
+  display: flex; align-items: center; gap: 5px;
+}
+.badge-gold {
+  background: rgba(201,168,76,0.15);
+  border-color: rgba(201,168,76,0.3);
+  color: var(--gold-light);
+}
+
+/* ── STEP INDICATOR ── */
+.steps-bar {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+.steps-inner {
+  max-width: 900px; margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+}
+.step-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; padding: 14px 8px;
+  position: relative; cursor: default;
+  transition: all 0.3s;
+}
+.step-item::after {
+  content: '';
+  position: absolute; top: 22px; left: calc(50% + 18px);
+  width: calc(100% - 36px); height: 2px;
+  background: var(--border);
+  transition: background 0.3s;
+}
+.step-item:last-child::after { display: none; }
+.step-item.done::after { background: var(--gold); }
+.step-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--border); color: var(--ink-soft);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 800;
+  transition: all 0.3s; margin-bottom: 6px;
+  position: relative; z-index: 1;
+}
+.step-item.active .step-num {
+  background: var(--ink); color: var(--gold-light);
+  box-shadow: 0 0 0 4px rgba(201,168,76,0.2);
+}
+.step-item.done .step-num {
+  background: var(--gold); color: var(--ink);
+}
+.step-lbl {
+  font-size: 0.64rem; font-weight: 700;
+  color: var(--ink-soft); text-transform: uppercase;
+  letter-spacing: 0.8px; text-align: center;
+  line-height: 1.2;
+}
+.step-item.active .step-lbl { color: var(--ink); }
+.step-item.done .step-lbl { color: var(--gold); }
+
+/* ── MAIN LAYOUT ── */
+.main {
+  max-width: 900px; margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+/* ── SECTION CARD ── */
+.form-section {
+  display: none;
+  animation: fadeSlide 0.4s ease;
+}
+.form-section.active { display: block; }
+
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section-card {
+  background: var(--white);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.section-head {
+  padding: 20px 24px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+  background: linear-gradient(to right, #fafaf7, var(--white));
+}
+.section-icon {
+  width: 40px; height: 40px;
+  background: var(--ink);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.1rem; font-weight: 700;
+  color: var(--ink); line-height: 1.2;
+}
+.section-sub {
+  font-size: 0.74rem; color: var(--ink-soft);
+  margin-top: 2px; font-weight: 500;
+}
+.section-body { padding: 24px; }
+
+/* ── FORM ELEMENTS ── */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.form-row.single { grid-template-columns: 1fr; }
+.form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+.form-group { display: flex; flex-direction: column; }
+label {
+  font-size: 0.72rem; font-weight: 700;
+  color: var(--ink-mid); text-transform: uppercase;
+  letter-spacing: 0.8px; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 5px;
+}
+label .req { color: var(--gold); }
+
+input, select, textarea {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.9rem; color: var(--ink);
+  background: var(--cream);
+  border: 1.5px solid var(--border-dark);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  width: 100%;
+  appearance: none; -webkit-appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--gold);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+}
+input::placeholder, textarea::placeholder { color: var(--ink-soft); font-weight: 400; }
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7694' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 38px;
+  cursor: pointer;
+}
+textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+
+/* ── LOCATION CARDS ── */
+.loc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px; margin-top: 4px;
+}
+.loc-card {
+  border: 1.5px solid var(--border-dark);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--cream);
+  display: flex; align-items: center; gap: 10px;
+}
+.loc-card:hover {
+  border-color: var(--gold);
+  background: var(--gold-pale);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.loc-card.selected {
+  border-color: var(--gold);
+  background: var(--gold-pale);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+}
+.loc-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--border-dark); flex-shrink: 0;
+  transition: background 0.2s;
+}
+.loc-card.selected .loc-dot { background: var(--gold); }
+.loc-name { font-size: 0.82rem; font-weight: 600; color: var(--ink); line-height: 1.3; }
+.loc-price { font-size: 0.7rem; color: var(--ink-soft); margin-top: 1px; }
+.loc-empty { color: var(--ink-soft); font-size: 0.82rem; text-align: center; padding: 20px; }
+
+/* ── VEHICLE CARDS ── */
+.vehicle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.vehicle-card {
+  border: 1.5px solid var(--border-dark);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s;
+  background: var(--cream);
+  position: relative;
+}
+.vehicle-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+.vehicle-card.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.2), var(--shadow-md);
+}
+.vehicle-img-wrap {
+  height: 140px; overflow: hidden;
+  background: linear-gradient(135deg, #f0f0ea, #e8e8e0);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.vehicle-img-wrap img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.3s;
+}
+.vehicle-card:hover .vehicle-img-wrap img { transform: scale(1.05); }
+.vehicle-img-placeholder { font-size: 3rem; opacity: 0.3; }
+.vehicle-badge-sel {
+  position: absolute; top: 10px; right: 10px;
+  background: var(--gold); color: var(--ink);
+  font-size: 0.6rem; font-weight: 800;
+  padding: 3px 8px; border-radius: 20px;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  display: none;
+}
+.vehicle-card.selected .vehicle-badge-sel { display: block; }
+.vehicle-info { padding: 14px; }
+.vehicle-name {
+  font-family: 'Fraunces', serif;
+  font-size: 1rem; font-weight: 700;
+  color: var(--ink); margin-bottom: 4px;
+}
+.vehicle-pax {
+  font-size: 0.74rem; color: var(--ink-soft);
+  display: flex; align-items: center; gap: 4px;
+  margin-bottom: 8px;
+}
+.vehicle-price {
+  font-size: 0.8rem; font-weight: 700;
+  color: var(--gold);
+}
+.vehicle-desc {
+  font-size: 0.72rem; color: var(--ink-soft);
+  margin-top: 4px; line-height: 1.5;
+}
+.vehicle-empty { color: var(--ink-soft); font-size: 0.82rem; text-align: center; padding: 30px; }
+
+/* ── ADDON ITEMS ── */
+.addon-list { display: flex; flex-direction: column; gap: 10px; }
+.addon-item {
+  display: flex; align-items: center; justify-content: space-between;
+  border: 1.5px solid var(--border-dark);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  background: var(--cream);
+  gap: 12px;
+}
+.addon-info { flex: 1; }
+.addon-name { font-size: 0.88rem; font-weight: 700; color: var(--ink); }
+.addon-price { font-size: 0.74rem; color: var(--gold); font-weight: 600; margin-top: 2px; }
+.addon-desc { font-size: 0.72rem; color: var(--ink-soft); margin-top: 2px; }
+.addon-qty {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.qty-btn {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1.5px solid var(--border-dark);
+  background: var(--white); color: var(--ink);
+  font-size: 1rem; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; line-height: 1;
+}
+.qty-btn:hover { border-color: var(--gold); background: var(--gold-pale); }
+.qty-num {
+  font-size: 0.9rem; font-weight: 700;
+  color: var(--ink); min-width: 20px; text-align: center;
+}
+
+/* ── SUMMARY BOX ── */
+.summary-box {
+  background: var(--ink);
+  border-radius: var(--radius);
+  padding: 24px;
+  color: var(--white);
+  margin-bottom: 20px;
+}
+.summary-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1rem; color: var(--gold-light);
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sum-row {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 0.84rem; gap: 12px;
+}
+.sum-row:last-child { border-bottom: none; }
+.sum-label { color: rgba(255,255,255,0.5); font-weight: 500; flex-shrink: 0; }
+.sum-val { color: var(--white); font-weight: 700; text-align: right; }
+.sum-val.gold { color: var(--gold-light); }
+
+/* ── TERMS ── */
+.terms-wrap {
+  background: #fffdf0;
+  border: 1.5px solid #e8d98a;
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-bottom: 20px;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.terms-wrap input[type="checkbox"] {
+  width: 18px; height: 18px; flex-shrink: 0;
+  margin-top: 1px; accent-color: var(--gold);
+  cursor: pointer;
+}
+.terms-wrap label {
+  font-size: 0.8rem; color: #7a6020;
+  font-weight: 500; text-transform: none;
+  letter-spacing: 0; cursor: pointer; margin: 0;
+  line-height: 1.5;
+}
+
+/* ── BUTTONS ── */
+.btn-row {
+  display: flex; gap: 12px; margin-top: 24px;
+}
+.btn {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700; font-size: 0.88rem;
+  padding: 14px 24px; border-radius: var(--radius-sm);
+  border: none; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  transition: all 0.2s; text-decoration: none;
+  letter-spacing: 0.3px; white-space: nowrap;
+}
+.btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn-primary {
+  background: var(--ink); color: var(--gold-light);
+  flex: 1; justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover:not(:disabled) {
+  background: #1a2035;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: var(--ink); flex: 1; justify-content: center;
+  box-shadow: 0 4px 14px rgba(201,168,76,0.35);
+}
+.btn-gold:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(201,168,76,0.45);
+}
+.btn-ghost {
+  background: transparent; color: var(--ink-mid);
+  border: 1.5px solid var(--border-dark);
+}
+.btn-ghost:hover { background: var(--cream); border-color: var(--ink-mid); }
+.btn-wa {
+  background: linear-gradient(135deg, #25d366, #1aad52);
+  color: white; flex: 1; justify-content: center;
+  box-shadow: 0 4px 14px rgba(37,211,102,0.3);
+}
+.btn-wa:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(37,211,102,0.4);
+}
+.btn-sm { padding: 7px 14px; font-size: 0.76rem; }
+.btn-danger { background: var(--red); color: white; }
+.btn-edit { background: var(--blue); color: white; }
+
+/* ── DIVIDER ── */
+.divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 4px 0 18px; color: var(--ink-soft);
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+/* ── INFO NOTE ── */
+.info-note {
+  background: var(--gold-pale);
+  border: 1px solid #e8d98a;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 0.78rem; color: #7a6020;
+  display: flex; gap: 8px; align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+/* ── ADMIN PANEL ── */
+#adminPanel {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(10,15,30,0.85);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  padding: 16px;
+  overflow-y: auto;
+  align-items: flex-start;
+  justify-content: center;
+}
+#adminPanel.open { display: flex; }
+.admin-modal {
+  background: var(--white);
+  border-radius: 22px;
+  width: 100%; max-width: 680px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  margin: auto;
+}
+.admin-head {
+  background: var(--ink);
+  padding: 22px 26px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.admin-head h2 {
+  font-family: 'Fraunces', serif;
+  color: var(--gold-light); font-size: 1.2rem; font-weight: 700;
+}
+.admin-head p { color: rgba(255,255,255,0.4); font-size: 0.74rem; margin-top: 3px; }
+.admin-close {
+  background: rgba(255,255,255,0.1); border: none;
+  color: white; width: 34px; height: 34px;
+  border-radius: 50%; cursor: pointer; font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.admin-close:hover { background: rgba(255,255,255,0.2); }
+.admin-body { padding: 24px; }
+.admin-tabs {
+  display: flex; gap: 4px;
+  background: var(--cream); border-radius: var(--radius-sm);
+  padding: 4px; margin-bottom: 20px;
+}
+.admin-tab {
+  flex: 1; padding: 9px;
+  border: none; background: transparent;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.76rem; font-weight: 700;
+  color: var(--ink-soft); cursor: pointer;
+  border-radius: 6px; transition: all 0.2s;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.admin-tab.active {
+  background: var(--ink); color: var(--gold-light);
+}
+.admin-tab-content { display: none; }
+.admin-tab-content.active { display: block; }
+
+.admin-form-box {
+  background: var(--cream);
+  border: 1.5px dashed var(--border-dark);
+  border-radius: var(--radius-sm);
+  padding: 16px; margin-bottom: 14px;
+}
+.admin-form-box input,
+.admin-form-box select,
+.admin-form-box textarea {
+  margin-bottom: 10px; background: var(--white);
+}
+.admin-form-box input:last-child,
+.admin-form-box select:last-child,
+.admin-form-box textarea:last-child { margin-bottom: 0; }
+
+.admin-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 14px; background: var(--cream);
+  margin-bottom: 8px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  gap: 10px;
+}
+.admin-item-info { flex: 1; }
+.admin-item-info strong { display: block; color: var(--ink); font-size: 0.84rem; }
+.admin-item-info span { color: var(--ink-soft); font-size: 0.74rem; }
+.admin-btns { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* ── TRUST FOOTER ── */
+.trust-footer {
+  background: var(--ink);
+  padding: 28px 24px;
+  text-align: center;
+  margin-top: 40px;
+}
+.trust-inner { max-width: 900px; margin: 0 auto; }
+.trust-items {
+  display: flex; justify-content: center; gap: 32px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.trust-item { text-align: center; }
+.trust-icon { font-size: 1.4rem; margin-bottom: 4px; }
+.trust-lbl { font-size: 0.64rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+.trust-copy { font-size: 0.72rem; color: rgba(255,255,255,0.2); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: var(--gold-light);
+  padding: 12px 22px; border-radius: 30px;
+  font-size: 0.82rem; font-weight: 700;
+  box-shadow: var(--shadow-lg);
+  z-index: 99999; opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .hero-inner { flex-direction: column; gap: 20px; }
+  .form-row { grid-template-columns: 1fr; }
+  .form-row.triple { grid-template-columns: 1fr 1fr; }
+  .steps-inner { gap: 0; }
+  .step-lbl { font-size: 0.55rem; }
+  .vehicle-grid { grid-template-columns: 1fr 1fr; }
+  .btn-row { flex-direction: column; }
+  .trust-items { gap: 20px; }
+  .admin-modal { border-radius: 14px; }
+}
+</style>
 </head>
 <body>
 
-<!-- NOTE: UI & CSS KEKAL. HANYA LOGIK DIPERBAIKI -->
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-lines"></div>
+  <div class="hero-inner">
+    <div class="hero-brand" id="adminTrigger" title="My-Easytransport.com">
+      <div class="hero-logo-row">
+        <div class="hero-icon">🚗</div>
+        <div>
+          <div class="hero-name">My-Easy<span>transport</span>.com</div>
+          <div class="hero-tagline">Car Rental with Driver · KL & Beyond</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-badges">
+      <div class="badge badge-gold">⭐ 5-Star Rated</div>
+      <div class="badge">🛡️ Insured Vehicles</div>
+      <div class="badge">24/7 Support</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── STEP BAR ── -->
+<div class="steps-bar">
+  <div class="steps-inner">
+    <div class="step-item active" id="step1-ind">
+      <div class="step-num">1</div>
+      <div class="step-lbl">Trip Details</div>
+    </div>
+    <div class="step-item" id="step2-ind">
+      <div class="step-num">2</div>
+      <div class="step-lbl">Vehicle</div>
+    </div>
+    <div class="step-item" id="step3-ind">
+      <div class="step-num">3</div>
+      <div class="step-lbl">Extras</div>
+    </div>
+    <div class="step-item" id="step4-ind">
+      <div class="step-num">4</div>
+      <div class="step-lbl">Confirm</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- STEP 1: TRIP DETAILS -->
+  <div class="form-section active" id="sec1">
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-icon">👤</div>
+        <div>
+          <div class="section-title">Your Details</div>
+          <div class="section-sub">Tell us who's travelling</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name <span class="req">*</span></label>
+            <input type="text" id="custName" placeholder="e.g. Ahmad Razif">
+          </div>
+          <div class="form-group">
+            <label>Phone Number <span class="req">*</span></label>
+            <input type="tel" id="custPhone" placeholder="e.g. 012-345 6789">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>No. of Passengers <span class="req">*</span></label>
+            <select id="custPax">
+              <option value="">Select passengers</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Pickup Date <span class="req">*</span></label>
+            <input type="date" id="pickupDate">
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group">
+            <label>Pickup Time <span class="req">*</span></label>
+            <input type="time" id="pickupTime" value="09:00">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-icon">📍</div>
+        <div>
+          <div class="section-title">Pickup Location</div>
+          <div class="section-sub">Where should we pick you up?</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="loc-grid" id="pickupGrid">
+          <div class="loc-empty">Loading locations...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-icon">🏁</div>
+        <div>
+          <div class="section-title">Drop-off Location</div>
+          <div class="section-sub">Where are you heading?</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="loc-grid" id="dropoffGrid">
+          <div class="loc-empty">Loading locations...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goStep(2)">
+        Continue to Vehicle Selection →
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 2: VEHICLE -->
+  <div class="form-section" id="sec2">
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-icon">🚘</div>
+        <div>
+          <div class="section-title">Choose Your Vehicle</div>
+          <div class="section-sub">Select the best fit for your group</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="vehicle-grid" id="vehicleGrid">
+          <div class="vehicle-empty">Loading vehicles...</div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(3)">Continue to Extras →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: ADDONS -->
+  <div class="form-section" id="sec3">
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-icon">✨</div>
+        <div>
+          <div class="section-title">Add-on Services</div>
+          <div class="section-sub">Optional extras to enhance your journey</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="addon-list" id="addonList">
+          <div class="loc-empty">No add-ons available at this time.</div>
+        </div>
+        <div class="form-group" style="margin-top:20px">
+          <label>Special Notes / Requests</label>
+          <textarea id="custNote" placeholder="Any special requirements, flight numbers, hotel names, etc."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goStep(2)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(4)">Review Booking →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: CONFIRM -->
+  <div class="form-section" id="sec4">
+    <div class="summary-box">
+      <div class="summary-title">📋 Booking Summary</div>
+      <div id="summaryContent"></div>
+    </div>
+
+    <div class="terms-wrap">
+      <input type="checkbox" id="termsCheck" onchange="toggleSendBtn()">
+      <label for="termsCheck" id="termsLabel">I agree to the Terms & Conditions of My-Easytransport.com</label>
+    </div>
+
+    <button class="btn btn-wa" id="btnSendWA" onclick="sendWA()" disabled style="width:100%; margin-bottom:10px; font-size:0.95rem; padding:16px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Send Booking via WhatsApp
+    </button>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goStep(3)">← Edit Booking</button>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- ── TRUST FOOTER ── -->
+<div class="trust-footer">
+  <div class="trust-inner">
+    <div class="trust-items">
+      <div class="trust-item"><div class="trust-icon">🚗</div><div class="trust-lbl">Professional Drivers</div></div>
+      <div class="trust-item"><div class="trust-icon">🛡️</div><div class="trust-lbl">Fully Insured</div></div>
+      <div class="trust-item"><div class="trust-icon">⏰</div><div class="trust-lbl">On-Time Guarantee</div></div>
+      <div class="trust-item"><div class="trust-icon">📞</div><div class="trust-lbl">24/7 Support</div></div>
+      <div class="trust-item"><div class="trust-icon">✅</div><div class="trust-lbl">Verified Reviews</div></div>
+    </div>
+    <div class="trust-copy">© 2025 My-Easytransport.com · All Rights Reserved</div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<!-- ── ADMIN PANEL ── -->
+<div id="adminPanel">
+  <div class="admin-modal">
+    <div class="admin-head">
+      <div>
+        <h2>⚙️ Admin Panel</h2>
+        <p>My-Easytransport.com · Management Console</p>
+      </div>
+      <button class="admin-close" onclick="closeAdmin()">✕</button>
+    </div>
+    <div class="admin-body">
+      <div class="admin-tabs">
+        <button class="admin-tab active" onclick="adminTab('vehicles', this)">🚘 Vehicles</button>
+        <button class="admin-tab" onclick="adminTab('locations', this)">📍 Locations</button>
+        <button class="admin-tab" onclick="adminTab('addons', this)">✨ Add-ons</button>
+        <button class="admin-tab" onclick="adminTab('settings', this)">⚙️ Settings</button>
+      </div>
+
+      <!-- VEHICLES -->
+      <div class="admin-tab-content active" id="atab-vehicles">
+        <div class="admin-form-box">
+          <input type="hidden" id="editVehId">
+          <label>Vehicle Name</label>
+          <input type="text" id="vehName" placeholder="e.g. Toyota Hiace">
+          <label>Max Passengers</label>
+          <input type="number" id="vehPax" placeholder="e.g. 12">
+          <label>Description</label>
+          <input type="text" id="vehDesc" placeholder="e.g. Spacious MPV with A/C">
+          <label>Photo URL</label>
+          <input type="text" id="vehImg" placeholder="https://...">
+          <label>Price Info (optional)</label>
+          <input type="text" id="vehPrice" placeholder="e.g. From RM 350/trip">
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn btn-primary btn-sm" onclick="saveVehicle()">💾 Save Vehicle</button>
+            <button class="btn btn-ghost btn-sm" id="btnCancelVeh" onclick="cancelVeh()" style="display:none">✕ Cancel</button>
+          </div>
+        </div>
+        <div id="adminVehList"></div>
+      </div>
+
+      <!-- LOCATIONS -->
+      <div class="admin-tab-content" id="atab-locations">
+        <div class="admin-form-box">
+          <input type="hidden" id="editLocId">
+          <label>Location Name</label>
+          <input type="text" id="locName" placeholder="e.g. KLIA Terminal 1">
+          <label>Zone / Info (optional)</label>
+          <input type="text" id="locZone" placeholder="e.g. Airport Zone">
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn btn-primary btn-sm" onclick="saveLoc()">💾 Save Location</button>
+            <button class="btn btn-ghost btn-sm" id="btnCancelLoc" onclick="cancelLoc()" style="display:none">✕ Cancel</button>
+          </div>
+        </div>
+        <div id="adminLocList"></div>
+      </div>
+
+      <!-- ADDONS -->
+      <div class="admin-tab-content" id="atab-addons">
+        <div class="admin-form-box">
+          <input type="hidden" id="editAddonId">
+          <label>Add-on Name</label>
+          <input type="text" id="addonName" placeholder="e.g. Child Seat">
+          <label>Price (RM)</label>
+          <input type="number" id="addonPrice" placeholder="e.g. 30">
+          <label>Description</label>
+          <input type="text" id="addonDesc" placeholder="e.g. Safety-certified infant seat">
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn btn-primary btn-sm" onclick="saveAddon()">💾 Save Add-on</button>
+            <button class="btn btn-ghost btn-sm" id="btnCancelAddon" onclick="cancelAddon()" style="display:none">✕ Cancel</button>
+          </div>
+        </div>
+        <div id="adminAddonList"></div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="admin-tab-content" id="atab-settings">
+        <div class="admin-form-box">
+          <label>WhatsApp Number 1</label>
+          <input type="text" id="confWA1" placeholder="60182246616">
+          <label>WhatsApp Number 2</label>
+          <input type="text" id="confWA2" placeholder="601110025084">
+          <label>Max Passengers (global)</label>
+          <input type="number" id="confMaxPax" placeholder="16">
+          <label>Terms & Conditions Text</label>
+          <textarea id="confTermsText" placeholder="I agree to the Terms & Conditions..."></textarea>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn btn-primary btn-sm" onclick="saveSettings()">💾 Save Settings</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 <script>
-// ─────────────────────────────────────────────
-// FIREBASE CONFIG (UNCHANGED)
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────
+// FIREBASE
+// ─────────────────────────────────────
 const firebaseConfig = {
   apiKey: "AIzaSyBJa05_OVkBGWrwaFFNFGop2Sp4w4eM_J0",
   authDomain: "car-rental-system-5f0f2.firebaseapp.com",
@@ -32,91 +969,466 @@ const firebaseConfig = {
   messagingSenderId: "772009970033",
   appId: "1:772009970033:web:30c1c2f52111cc94aced0"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ✅ ADMIN PASSWORD UPDATED
+// ─────────────────────────────────────
+// STATE
+// ─────────────────────────────────────
 const ADMIN_PASS = "123iin456";
-
 const DEFAULT_WA1 = "60182246616";
 const DEFAULT_WA2 = "601110025084";
 
-// ── State ──
-let vehicles = {}, locations = {}, addons = {}, links = {}, settings = {};
-let selectedPickup = null, selectedDropoff = null;
-let selectedVehicle = null;
+let settings = {}, vehicles = {}, locations = {}, addons = {};
+let selectedPickup = null, selectedDropoff = null, selectedVehicle = null;
 let addonQtys = {};
-let adminUnlocked = false;
+let waTurn = 1;
 let currentStep = 1;
-let waTurn = 1; // ✅ round-robin WhatsApp
+let adminClicks = 0;
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────
 // INIT
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────
 function initApp() {
+  // Set min date to today
+  document.getElementById('pickupDate').min = new Date().toISOString().split('T')[0];
+
   db.ref('ez_settings').on('value', snap => {
-    settings = snap.val() || {
-      wa1: DEFAULT_WA1,
-      wa2: DEFAULT_WA2,
-      maxPax: 16,
-      termsText: 'I agree to the Terms & Conditions of My-Easytransport.com'
-    };
+    settings = snap.val() || { wa1: DEFAULT_WA1, wa2: DEFAULT_WA2, maxPax: 16, termsText: "I agree to the Terms & Conditions of My-Easytransport.com" };
     renderPassengerOptions();
+    document.getElementById('termsLabel').innerText = settings.termsText || "I agree to the Terms & Conditions of My-Easytransport.com";
+    // Sync admin fields
+    if (document.getElementById('confWA1')) {
+      document.getElementById('confWA1').value = settings.wa1 || DEFAULT_WA1;
+      document.getElementById('confWA2').value = settings.wa2 || DEFAULT_WA2;
+      document.getElementById('confMaxPax').value = settings.maxPax || 16;
+      document.getElementById('confTermsText').value = settings.termsText || "";
+    }
+  });
+
+  db.ref('ez_vehicles').on('value', snap => {
+    vehicles = snap.val() || {};
+    renderVehicleGrid();
+    renderAdminVehicles();
+  });
+
+  db.ref('ez_locations').on('value', snap => {
+    locations = snap.val() || {};
+    renderLocationGrids();
+    renderAdminLocations();
+  });
+
+  db.ref('ez_addons').on('value', snap => {
+    addons = snap.val() || {};
+    renderAddonList();
+    renderAdminAddons();
   });
 }
 
-// ─────────────────────────────────────────────
-// PASSENGER SELECT (BACKEND CONTROLLED)
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────
+// PASSENGER OPTIONS
+// ─────────────────────────────────────
 function renderPassengerOptions() {
   const sel = document.getElementById('custPax');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">Select</option>';
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">Select passengers</option>';
   const max = parseInt(settings.maxPax || 16);
   for (let i = 1; i <= max; i++) {
-    sel.innerHTML += `<option value="${i}">${i}</option>`;
+    sel.innerHTML += `<option value="${i}" ${prev == i ? 'selected' : ''}>${i} Passenger${i > 1 ? 's' : ''}</option>`;
   }
 }
 
-// ─────────────────────────────────────────────
-// ✅ SINGLE WHATSAPP BUTTON (ROUND ROBIN)
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────
+// LOCATION GRIDS
+// ─────────────────────────────────────
+function renderLocationGrids() {
+  const keys = Object.keys(locations);
+  const makeCard = (id, type) => {
+    const loc = locations[id];
+    const sel = type === 'pickup' ? selectedPickup : selectedDropoff;
+    return `<div class="loc-card ${sel === id ? 'selected' : ''}" onclick="selectLoc('${id}','${type}')">
+      <div class="loc-dot"></div>
+      <div>
+        <div class="loc-name">${loc.name}</div>
+        ${loc.zone ? `<div class="loc-price">${loc.zone}</div>` : ''}
+      </div>
+    </div>`;
+  };
+
+  const pickupGrid = document.getElementById('pickupGrid');
+  const dropoffGrid = document.getElementById('dropoffGrid');
+
+  if (!keys.length) {
+    pickupGrid.innerHTML = '<div class="loc-empty">No locations available yet.</div>';
+    dropoffGrid.innerHTML = '<div class="loc-empty">No locations available yet.</div>';
+    return;
+  }
+  pickupGrid.innerHTML = keys.map(id => makeCard(id, 'pickup')).join('');
+  dropoffGrid.innerHTML = keys.map(id => makeCard(id, 'dropoff')).join('');
+}
+
+function selectLoc(id, type) {
+  if (type === 'pickup') selectedPickup = id;
+  else selectedDropoff = id;
+  renderLocationGrids();
+}
+
+// ─────────────────────────────────────
+// VEHICLE GRID
+// ─────────────────────────────────────
+function renderVehicleGrid() {
+  const grid = document.getElementById('vehicleGrid');
+  const keys = Object.keys(vehicles);
+  if (!keys.length) { grid.innerHTML = '<div class="vehicle-empty">No vehicles available yet.</div>'; return; }
+
+  grid.innerHTML = keys.map(id => {
+    const v = vehicles[id];
+    return `<div class="vehicle-card ${selectedVehicle === id ? 'selected' : ''}" onclick="selectVehicle('${id}')">
+      <div class="vehicle-img-wrap">
+        ${v.img ? `<img src="${v.img}" alt="${v.name}" onerror="this.style.display='none'">` : ''}
+        <div class="vehicle-img-placeholder">🚗</div>
+        <div class="vehicle-badge-sel">✓ Selected</div>
+      </div>
+      <div class="vehicle-info">
+        <div class="vehicle-name">${v.name}</div>
+        <div class="vehicle-pax">👥 Up to ${v.pax || '?'} passengers</div>
+        ${v.price ? `<div class="vehicle-price">${v.price}</div>` : ''}
+        ${v.desc ? `<div class="vehicle-desc">${v.desc}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectVehicle(id) {
+  selectedVehicle = id;
+  renderVehicleGrid();
+}
+
+// ─────────────────────────────────────
+// ADDON LIST
+// ─────────────────────────────────────
+function renderAddonList() {
+  const list = document.getElementById('addonList');
+  const keys = Object.keys(addons);
+  if (!keys.length) { list.innerHTML = '<div class="loc-empty">No add-ons available at this time.</div>'; return; }
+
+  list.innerHTML = keys.map(id => {
+    const a = addons[id];
+    const qty = addonQtys[id] || 0;
+    return `<div class="addon-item">
+      <div class="addon-info">
+        <div class="addon-name">${a.name}</div>
+        ${a.price ? `<div class="addon-price">RM ${parseFloat(a.price).toFixed(2)} each</div>` : ''}
+        ${a.desc ? `<div class="addon-desc">${a.desc}</div>` : ''}
+      </div>
+      <div class="addon-qty">
+        <button class="qty-btn" onclick="changeQty('${id}',-1)">−</button>
+        <div class="qty-num" id="qty-${id}">${qty}</div>
+        <button class="qty-btn" onclick="changeQty('${id}',1)">+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function changeQty(id, delta) {
+  addonQtys[id] = Math.max(0, (addonQtys[id] || 0) + delta);
+  const el = document.getElementById(`qty-${id}`);
+  if (el) el.innerText = addonQtys[id];
+}
+
+// ─────────────────────────────────────
+// STEP NAVIGATION
+// ─────────────────────────────────────
+function goStep(n) {
+  // Validate step 1
+  if (n > 1) {
+    const name = document.getElementById('custName').value.trim();
+    const phone = document.getElementById('custPhone').value.trim();
+    const pax = document.getElementById('custPax').value;
+    const date = document.getElementById('pickupDate').value;
+    if (!name) { showToast('⚠️ Please enter your name'); return; }
+    if (!phone) { showToast('⚠️ Please enter your phone number'); return; }
+    if (!pax) { showToast('⚠️ Please select number of passengers'); return; }
+    if (!date) { showToast('⚠️ Please select a pickup date'); return; }
+    if (!selectedPickup) { showToast('⚠️ Please select a pickup location'); return; }
+    if (!selectedDropoff) { showToast('⚠️ Please select a drop-off location'); return; }
+  }
+  // Validate step 2
+  if (n > 2 && !selectedVehicle) {
+    showToast('⚠️ Please select a vehicle'); return;
+  }
+
+  currentStep = n;
+  document.querySelectorAll('.form-section').forEach((s, i) => {
+    s.classList.toggle('active', i + 1 === n);
+  });
+  document.querySelectorAll('.step-item').forEach((s, i) => {
+    s.classList.remove('active', 'done');
+    if (i + 1 < n) s.classList.add('done');
+    if (i + 1 === n) s.classList.add('active');
+  });
+
+  if (n === 4) renderSummary();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─────────────────────────────────────
+// SUMMARY
+// ─────────────────────────────────────
+function renderSummary() {
+  const pickup = locations[selectedPickup]?.name || 'N/A';
+  const dropoff = locations[selectedDropoff]?.name || 'N/A';
+  const vehicle = vehicles[selectedVehicle]?.name || 'N/A';
+  const date = document.getElementById('pickupDate').value;
+  const time = document.getElementById('pickupTime').value;
+  const pax = document.getElementById('custPax').value;
+  const name = document.getElementById('custName').value;
+  const phone = document.getElementById('custPhone').value;
+  const note = document.getElementById('custNote').value;
+
+  // Addons
+  const addonLines = Object.keys(addonQtys)
+    .filter(id => addonQtys[id] > 0)
+    .map(id => `<div class="sum-row"><span class="sum-label">+ ${addons[id]?.name}</span><span class="sum-val">${addonQtys[id]}x</span></div>`)
+    .join('');
+
+  document.getElementById('summaryContent').innerHTML = `
+    <div class="sum-row"><span class="sum-label">👤 Name</span><span class="sum-val">${name}</span></div>
+    <div class="sum-row"><span class="sum-label">📞 Phone</span><span class="sum-val">${phone}</span></div>
+    <div class="sum-row"><span class="sum-label">👥 Passengers</span><span class="sum-val">${pax}</span></div>
+    <div class="sum-row"><span class="sum-label">📅 Date & Time</span><span class="sum-val gold">${date} · ${time}</span></div>
+    <div class="sum-row"><span class="sum-label">📍 Pickup</span><span class="sum-val">${pickup}</span></div>
+    <div class="sum-row"><span class="sum-label">🏁 Drop-off</span><span class="sum-val">${dropoff}</span></div>
+    <div class="sum-row"><span class="sum-label">🚘 Vehicle</span><span class="sum-val gold">${vehicle}</span></div>
+    ${addonLines}
+    ${note ? `<div class="sum-row"><span class="sum-label">📝 Notes</span><span class="sum-val">${note}</span></div>` : ''}
+  `;
+  document.getElementById('termsCheck').checked = false;
+  toggleSendBtn();
+}
+
+function toggleSendBtn() {
+  document.getElementById('btnSendWA').disabled = !document.getElementById('termsCheck').checked;
+}
+
+// ─────────────────────────────────────
+// SEND WHATSAPP (ROUND ROBIN)
+// ─────────────────────────────────────
 function sendWA() {
   const num = waTurn === 1 ? (settings.wa1 || DEFAULT_WA1) : (settings.wa2 || DEFAULT_WA2);
-  waTurn = waTurn === 1 ? 2 : 1; // toggle setiap booking
+  waTurn = waTurn === 1 ? 2 : 1;
 
-  const msg = `🚗 *NEW BOOKING — My-Easytransport.com*
+  const pickup = locations[selectedPickup]?.name || 'N/A';
+  const dropoff = locations[selectedDropoff]?.name || 'N/A';
+  const vehicle = vehicles[selectedVehicle]?.name || 'N/A';
+  const date = document.getElementById('pickupDate').value;
+  const time = document.getElementById('pickupTime').value;
 
-👤 Name: ${custName.value}
-📞 Phone: ${custPhone.value}
-👥 Passengers: ${custPax.value}
+  const addonText = Object.keys(addonQtys)
+    .filter(id => addonQtys[id] > 0)
+    .map(id => `   • ${addonQtys[id]}x ${addons[id]?.name}`)
+    .join('\n');
 
-📍 Pickup: ${locations[selectedPickup]?.name || 'N/A'}
-🏁 Drop-off: ${locations[selectedDropoff]?.name || 'N/A'}
-📅 Date & Time: ${pickupDate.value} ${pickupTime.value}
+  const msg =
+`🚗 *NEW BOOKING — My-Easytransport.com*
+━━━━━━━━━━━━━━━━━━━━━━━━
 
-🚘 Vehicle: ${vehicles[selectedVehicle]?.name || 'N/A'}
+👤 *Customer Details*
+   Name: ${document.getElementById('custName').value}
+   Phone: ${document.getElementById('custPhone').value}
+   Passengers: ${document.getElementById('custPax').value}
 
-📝 Notes: ${custNote.value || 'None'}`;
+📅 *Trip Details*
+   Date: ${date}
+   Time: ${time}
+   Pickup: ${pickup}
+   Drop-off: ${dropoff}
+
+🚘 *Vehicle Selected*
+   ${vehicle}
+${addonText ? `\n✨ *Add-ons*\n${addonText}` : ''}
+📝 *Notes*
+   ${document.getElementById('custNote').value || 'None'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+Sent via My-Easytransport.com Booking Form`;
 
   window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-// ─────────────────────────────────────────────
-// ✅ ADMIN SETTINGS (TAMBAH MAX PASSENGER)
-// ─────────────────────────────────────────────
-function saveSettings() {
-  db.ref('ez_settings').set({
-    wa1: confWA1.value.trim(),
-    wa2: confWA2.value.trim(),
-    maxPax: parseInt(confMaxPax.value) || 16,
-    termsText: confTermsText.value.trim()
-  });
-  alert('✅ Settings saved');
+// ─────────────────────────────────────
+// ADMIN PANEL
+// ─────────────────────────────────────
+document.getElementById('adminTrigger').addEventListener('click', () => {
+  adminClicks++;
+  if (adminClicks >= 5) {
+    adminClicks = 0;
+    const pass = prompt('🔐 Admin Access:');
+    if (pass === ADMIN_PASS) {
+      document.getElementById('adminPanel').classList.add('open');
+    } else if (pass !== null) {
+      showToast('❌ Incorrect password');
+    }
+  }
+  setTimeout(() => adminClicks = 0, 2500);
+});
+
+function closeAdmin() { document.getElementById('adminPanel').classList.remove('open'); }
+
+function adminTab(tab, btn) {
+  document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('atab-' + tab).classList.add('active');
 }
 
+// VEHICLES CRUD
+function saveVehicle() {
+  const id = document.getElementById('editVehId').value || Date.now();
+  const name = document.getElementById('vehName').value.trim();
+  if (!name) { showToast('⚠️ Vehicle name required'); return; }
+  db.ref('ez_vehicles/' + id).set({
+    name,
+    pax: document.getElementById('vehPax').value || '',
+    desc: document.getElementById('vehDesc').value || '',
+    img: document.getElementById('vehImg').value || '',
+    price: document.getElementById('vehPrice').value || ''
+  }).then(() => { cancelVeh(); showToast('✅ Vehicle saved'); });
+}
+function editVehicle(id) {
+  const v = vehicles[id];
+  document.getElementById('editVehId').value = id;
+  document.getElementById('vehName').value = v.name || '';
+  document.getElementById('vehPax').value = v.pax || '';
+  document.getElementById('vehDesc').value = v.desc || '';
+  document.getElementById('vehImg').value = v.img || '';
+  document.getElementById('vehPrice').value = v.price || '';
+  document.getElementById('btnCancelVeh').style.display = 'flex';
+}
+function cancelVeh() {
+  ['editVehId','vehName','vehPax','vehDesc','vehImg','vehPrice'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('btnCancelVeh').style.display = 'none';
+}
+function deleteItem(path) { if (confirm('Delete this item?')) db.ref(path).remove(); }
+
+function renderAdminVehicles() {
+  const list = document.getElementById('adminVehList');
+  const keys = Object.keys(vehicles);
+  if (!keys.length) { list.innerHTML = '<p style="text-align:center;color:var(--ink-soft);font-size:0.8rem;padding:12px">No vehicles yet.</p>'; return; }
+  list.innerHTML = keys.map(id => `
+    <div class="admin-item">
+      <div class="admin-item-info">
+        <strong>${vehicles[id].name}</strong>
+        <span>Max ${vehicles[id].pax || '?'} pax · ${vehicles[id].price || 'No price set'}</span>
+      </div>
+      <div class="admin-btns">
+        <button class="btn btn-edit btn-sm" onclick="editVehicle('${id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('ez_vehicles/${id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+// LOCATIONS CRUD
+function saveLoc() {
+  const id = document.getElementById('editLocId').value || Date.now();
+  const name = document.getElementById('locName').value.trim();
+  if (!name) { showToast('⚠️ Location name required'); return; }
+  db.ref('ez_locations/' + id).set({
+    name,
+    zone: document.getElementById('locZone').value || ''
+  }).then(() => { cancelLoc(); showToast('✅ Location saved'); });
+}
+function editLoc(id) {
+  const l = locations[id];
+  document.getElementById('editLocId').value = id;
+  document.getElementById('locName').value = l.name || '';
+  document.getElementById('locZone').value = l.zone || '';
+  document.getElementById('btnCancelLoc').style.display = 'flex';
+}
+function cancelLoc() {
+  ['editLocId','locName','locZone'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('btnCancelLoc').style.display = 'none';
+}
+function renderAdminLocations() {
+  const list = document.getElementById('adminLocList');
+  const keys = Object.keys(locations);
+  if (!keys.length) { list.innerHTML = '<p style="text-align:center;color:var(--ink-soft);font-size:0.8rem;padding:12px">No locations yet.</p>'; return; }
+  list.innerHTML = keys.map(id => `
+    <div class="admin-item">
+      <div class="admin-item-info">
+        <strong>${locations[id].name}</strong>
+        <span>${locations[id].zone || 'No zone info'}</span>
+      </div>
+      <div class="admin-btns">
+        <button class="btn btn-edit btn-sm" onclick="editLoc('${id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('ez_locations/${id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+// ADDONS CRUD
+function saveAddon() {
+  const id = document.getElementById('editAddonId').value || Date.now();
+  const name = document.getElementById('addonName').value.trim();
+  if (!name) { showToast('⚠️ Add-on name required'); return; }
+  db.ref('ez_addons/' + id).set({
+    name,
+    price: document.getElementById('addonPrice').value || '',
+    desc: document.getElementById('addonDesc').value || ''
+  }).then(() => { cancelAddon(); showToast('✅ Add-on saved'); });
+}
+function editAddon(id) {
+  const a = addons[id];
+  document.getElementById('editAddonId').value = id;
+  document.getElementById('addonName').value = a.name || '';
+  document.getElementById('addonPrice').value = a.price || '';
+  document.getElementById('addonDesc').value = a.desc || '';
+  document.getElementById('btnCancelAddon').style.display = 'flex';
+}
+function cancelAddon() {
+  ['editAddonId','addonName','addonPrice','addonDesc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('btnCancelAddon').style.display = 'none';
+}
+function renderAdminAddons() {
+  const list = document.getElementById('adminAddonList');
+  const keys = Object.keys(addons);
+  if (!keys.length) { list.innerHTML = '<p style="text-align:center;color:var(--ink-soft);font-size:0.8rem;padding:12px">No add-ons yet.</p>'; return; }
+  list.innerHTML = keys.map(id => `
+    <div class="admin-item">
+      <div class="admin-item-info">
+        <strong>${addons[id].name}</strong>
+        <span>${addons[id].price ? 'RM ' + addons[id].price : 'Free'} · ${addons[id].desc || ''}</span>
+      </div>
+      <div class="admin-btns">
+        <button class="btn btn-edit btn-sm" onclick="editAddon('${id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('ez_addons/${id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+// SETTINGS
+function saveSettings() {
+  db.ref('ez_settings').set({
+    wa1: document.getElementById('confWA1').value.trim() || DEFAULT_WA1,
+    wa2: document.getElementById('confWA2').value.trim() || DEFAULT_WA2,
+    maxPax: parseInt(document.getElementById('confMaxPax').value) || 16,
+    termsText: document.getElementById('confTermsText').value.trim() || "I agree to the Terms & Conditions of My-Easytransport.com"
+  }).then(() => showToast('✅ Settings updated'));
+}
+
+// ─────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.innerText = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─────────────────────────────────────
+// START
+// ─────────────────────────────────────
 window.onload = initApp;
 </script>
-
 </body>
+</html>
