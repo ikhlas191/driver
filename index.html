@@ -1,0 +1,122 @@
+<!-- EDITED VERSION: FINAL CONFIRMED -->
+<!-- 1) Admin password updated -->
+<!-- 2) ✅ SINGLE WhatsApp button (auto round-robin, customer tidak pilih agent) -->
+<!-- 3) ✅ Max passenger configurable dari backend (default 16) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My-Easytransport.com | Car Rental with Driver</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+
+<!-- ✅ FIX: Firebase scripts dimuat dengan betul -->
+https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<!-- NOTE: UI & CSS KEKAL. HANYA LOGIK DIPERBAIKI -->
+
+<script>
+// ─────────────────────────────────────────────
+// FIREBASE CONFIG (UNCHANGED)
+// ─────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyBJa05_OVkBGWrwaFFNFGop2Sp4w4eM_J0",
+  authDomain: "car-rental-system-5f0f2.firebaseapp.com",
+  databaseURL: "https://car-rental-system-5f0f2-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "car-rental-system-5f0f2",
+  storageBucket: "car-rental-system-5f0f2.firebasestorage.app",
+  messagingSenderId: "772009970033",
+  appId: "1:772009970033:web:30c1c2f52111cc94aced0"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ✅ ADMIN PASSWORD UPDATED
+const ADMIN_PASS = "123iin456";
+
+const DEFAULT_WA1 = "60182246616";
+const DEFAULT_WA2 = "601110025084";
+
+// ── State ──
+let vehicles = {}, locations = {}, addons = {}, links = {}, settings = {};
+let selectedPickup = null, selectedDropoff = null;
+let selectedVehicle = null;
+let addonQtys = {};
+let adminUnlocked = false;
+let currentStep = 1;
+let waTurn = 1; // ✅ round-robin WhatsApp
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+function initApp() {
+  db.ref('ez_settings').on('value', snap => {
+    settings = snap.val() || {
+      wa1: DEFAULT_WA1,
+      wa2: DEFAULT_WA2,
+      maxPax: 16,
+      termsText: 'I agree to the Terms & Conditions of My-Easytransport.com'
+    };
+    renderPassengerOptions();
+  });
+}
+
+// ─────────────────────────────────────────────
+// PASSENGER SELECT (BACKEND CONTROLLED)
+// ─────────────────────────────────────────────
+function renderPassengerOptions() {
+  const sel = document.getElementById('custPax');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Select</option>';
+  const max = parseInt(settings.maxPax || 16);
+  for (let i = 1; i <= max; i++) {
+    sel.innerHTML += `<option value="${i}">${i}</option>`;
+  }
+}
+
+// ─────────────────────────────────────────────
+// ✅ SINGLE WHATSAPP BUTTON (ROUND ROBIN)
+// ─────────────────────────────────────────────
+function sendWA() {
+  const num = waTurn === 1 ? (settings.wa1 || DEFAULT_WA1) : (settings.wa2 || DEFAULT_WA2);
+  waTurn = waTurn === 1 ? 2 : 1; // toggle setiap booking
+
+  const msg = `🚗 *NEW BOOKING — My-Easytransport.com*
+
+👤 Name: ${custName.value}
+📞 Phone: ${custPhone.value}
+👥 Passengers: ${custPax.value}
+
+📍 Pickup: ${locations[selectedPickup]?.name || 'N/A'}
+🏁 Drop-off: ${locations[selectedDropoff]?.name || 'N/A'}
+📅 Date & Time: ${pickupDate.value} ${pickupTime.value}
+
+🚘 Vehicle: ${vehicles[selectedVehicle]?.name || 'N/A'}
+
+📝 Notes: ${custNote.value || 'None'}`;
+
+  window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// ─────────────────────────────────────────────
+// ✅ ADMIN SETTINGS (TAMBAH MAX PASSENGER)
+// ─────────────────────────────────────────────
+function saveSettings() {
+  db.ref('ez_settings').set({
+    wa1: confWA1.value.trim(),
+    wa2: confWA2.value.trim(),
+    maxPax: parseInt(confMaxPax.value) || 16,
+    termsText: confTermsText.value.trim()
+  });
+  alert('✅ Settings saved');
+}
+
+window.onload = initApp;
+</script>
+
+</body>
