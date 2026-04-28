@@ -630,6 +630,62 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 }
 .toast.show { opacity: 1; }
 
+/* ── TERMS CHECKED STATE ── */
+.terms-wrap.agreed {
+  background: #e8f5e9;
+  border-color: #4caf50;
+}
+.terms-wrap.agreed label { color: #1b5e20; }
+.terms-check-icon {
+  display: none; font-size: 1.1rem; flex-shrink: 0; margin-top: 1px;
+}
+.terms-wrap.agreed .terms-check-icon { display: block; }
+.terms-link {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--gold); font-size: 0.74rem; font-weight: 700;
+  text-decoration: none; margin-top: 8px;
+  border-bottom: 1px dashed var(--gold);
+  transition: opacity 0.15s;
+}
+.terms-link:hover { opacity: 0.75; }
+
+/* ── PRICE DISPLAY ROW ── */
+.price-display {
+  background: linear-gradient(135deg, var(--ink) 0%, #1a2035 100%);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-top: 12px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.price-display-label {
+  font-size: 0.7rem; color: rgba(255,255,255,0.5);
+  text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+}
+.price-display-amount {
+  font-family: 'Fraunces', serif;
+  font-size: 1.3rem; color: var(--gold-light); font-weight: 700;
+}
+.price-note {
+  font-size: 0.68rem; color: rgba(255,255,255,0.35);
+  margin-top: 2px; text-align: right;
+}
+
+/* ── PAYMENT SELECT ── */
+.payment-option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border-dark);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  cursor: pointer; transition: all 0.2s;
+  background: var(--cream);
+}
+.payment-option:hover { border-color: var(--gold); background: var(--gold-pale); }
+.payment-option.selected { border-color: var(--gold); background: var(--gold-pale); box-shadow: 0 0 0 3px rgba(201,168,76,0.15); }
+.payment-option input[type="radio"] { accent-color: var(--gold); width:16px; height:16px; flex-shrink:0; }
+.payment-label { font-size: 0.88rem; font-weight: 700; color: var(--ink); }
+.payment-sub { font-size: 0.72rem; color: var(--ink-soft); margin-top: 1px; }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 600px) {
   .hero-inner { flex-direction: column; gap: 20px; }
@@ -697,23 +753,13 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
   <div class="form-section active" id="sec1">
     <div class="section-card">
       <div class="section-head">
-        <div class="section-icon">👤</div>
+        <div class="section-icon">🗓️</div>
         <div>
-          <div class="section-title">Your Details</div>
-          <div class="section-sub">Tell us who's travelling</div>
+          <div class="section-title">Trip Details</div>
+          <div class="section-sub">Tell us about your journey</div>
         </div>
       </div>
       <div class="section-body">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Full Name <span class="req">*</span></label>
-            <input type="text" id="custName" placeholder="e.g. Ahmad Razif">
-          </div>
-          <div class="form-group">
-            <label>Phone Number <span class="req">*</span></label>
-            <input type="tel" id="custPhone" placeholder="e.g. 012-345 6789">
-          </div>
-        </div>
         <div class="form-row">
           <div class="form-group">
             <label>No. of Passengers <span class="req">*</span></label>
@@ -723,7 +769,7 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
           </div>
           <div class="form-group">
             <label>Pickup Date <span class="req">*</span></label>
-            <input type="date" id="pickupDate">
+            <input type="text" id="pickupDate" placeholder="DD/MM/YYYY" maxlength="10">
           </div>
         </div>
         <div class="form-row single">
@@ -732,35 +778,63 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
             <input type="time" id="pickupTime" value="09:00">
           </div>
         </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>📍 Pickup Location <span class="req">*</span></label>
+            <select id="pickupSelect" onchange="selectedPickup=this.value; updateLocPrice()">
+              <option value="">-- Select Pickup --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>🏁 Drop-off Location <span class="req">*</span></label>
+            <select id="dropoffSelect" onchange="selectedDropoff=this.value; updateLocPrice()">
+              <option value="">-- Select Drop-off --</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="locPriceDisplay" style="display:none">
+          <div class="price-display">
+            <div>
+              <div class="price-display-label">Estimated Route Price</div>
+              <div class="price-note" id="locPriceNote"></div>
+            </div>
+            <div class="price-display-amount" id="locPriceAmount">RM 0</div>
+          </div>
+        </div>
       </div>
     </div>
 
     <div class="section-card">
       <div class="section-head">
-        <div class="section-icon">📍</div>
+        <div class="section-icon">💳</div>
         <div>
-          <div class="section-title">Pickup Location</div>
-          <div class="section-sub">Where should we pick you up?</div>
+          <div class="section-title">Payment Method</div>
+          <div class="section-sub">Choose your preferred payment option</div>
         </div>
       </div>
       <div class="section-body">
-        <div class="loc-grid" id="pickupGrid">
-          <div class="loc-empty">Loading locations...</div>
+        <div class="payment-option selected" id="pay-qr" onclick="selectPayment('qr')">
+          <input type="radio" name="payment" value="qr" checked>
+          <div>
+            <div class="payment-label">🏦 QR / Bank Transfer</div>
+            <div class="payment-sub">Instant transfer via QR code or online banking</div>
+          </div>
         </div>
-      </div>
-    </div>
-
-    <div class="section-card">
-      <div class="section-head">
-        <div class="section-icon">🏁</div>
-        <div>
-          <div class="section-title">Drop-off Location</div>
-          <div class="section-sub">Where are you heading?</div>
+        <div class="payment-option" id="pay-paypal" onclick="selectPayment('paypal')">
+          <input type="radio" name="payment" value="paypal">
+          <div>
+            <div class="payment-label">🌐 PayPal</div>
+            <div class="payment-sub">+6% processing fee applies</div>
+          </div>
         </div>
-      </div>
-      <div class="section-body">
-        <div class="loc-grid" id="dropoffGrid">
-          <div class="loc-empty">Loading locations...</div>
+        <div class="payment-option" id="pay-wise" onclick="selectPayment('wise')">
+          <input type="radio" name="payment" value="wise">
+          <div>
+            <div class="payment-label">💸 Wise Payment</div>
+            <div class="payment-sub">International transfer via Wise</div>
+          </div>
         </div>
       </div>
     </div>
@@ -827,9 +901,17 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
       <div id="summaryContent"></div>
     </div>
 
-    <div class="terms-wrap">
+    <div class="terms-wrap" id="termsWrap">
       <input type="checkbox" id="termsCheck" onchange="toggleSendBtn()">
-      <label for="termsCheck" id="termsLabel">I agree to the Terms & Conditions of My-Easytransport.com</label>
+      <span class="terms-check-icon">✅</span>
+      <div>
+        <label for="termsCheck" id="termsLabel">I agree to the Terms & Conditions of My-Easytransport.com</label>
+        <div>
+          <a href="#" id="termsLinkEl" class="terms-link" target="_blank" style="display:none">
+            📄 Read Terms & Conditions
+          </a>
+        </div>
+      </div>
     </div>
 
     <button class="btn btn-wa" id="btnSendWA" onclick="sendWA()" disabled style="width:100%; margin-bottom:10px; font-size:0.95rem; padding:16px;">
@@ -909,6 +991,8 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
           <input type="text" id="locName" placeholder="e.g. KLIA Terminal 1">
           <label>Zone / Info (optional)</label>
           <input type="text" id="locZone" placeholder="e.g. Airport Zone">
+          <label>Price (RM) — shown to customer</label>
+          <input type="number" id="locPrice" placeholder="e.g. 150">
           <div class="btn-row" style="margin-top:10px">
             <button class="btn btn-primary btn-sm" onclick="saveLoc()">💾 Save Location</button>
             <button class="btn btn-ghost btn-sm" id="btnCancelLoc" onclick="cancelLoc()" style="display:none">✕ Cancel</button>
@@ -946,6 +1030,8 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
           <input type="number" id="confMaxPax" placeholder="16">
           <label>Terms & Conditions Text</label>
           <textarea id="confTermsText" placeholder="I agree to the Terms & Conditions..."></textarea>
+          <label>Terms & Conditions Link URL</label>
+          <input type="text" id="confTermsLink" placeholder="https://...">
           <div class="btn-row" style="margin-top:10px">
             <button class="btn btn-primary btn-sm" onclick="saveSettings()">💾 Save Settings</button>
           </div>
@@ -989,20 +1075,76 @@ let adminClicks = 0;
 // ─────────────────────────────────────
 // INIT
 // ─────────────────────────────────────
+// ─────────────────────────────────────
+// PAYMENT METHOD
+// ─────────────────────────────────────
+let selectedPayment = 'qr';
+function selectPayment(val) {
+  selectedPayment = val;
+  ['qr','paypal','wise'].forEach(p => {
+    const el = document.getElementById('pay-' + p);
+    el.classList.toggle('selected', p === val);
+    el.querySelector('input').checked = (p === val);
+  });
+}
+
+// ─────────────────────────────────────
+// DATE FORMAT DD/MM/YYYY
+// ─────────────────────────────────────
+function formatDateInput(e) {
+  let v = e.target.value.replace(/\D/g,'');
+  if (v.length >= 3) v = v.slice(0,2) + '/' + v.slice(2);
+  if (v.length >= 6) v = v.slice(0,5) + '/' + v.slice(5,9);
+  e.target.value = v;
+}
+function isValidDate(str) {
+  const p = str.split('/');
+  if (p.length !== 3 || p[2].length !== 4) return false;
+  const d = parseInt(p[0]), m = parseInt(p[1]), y = parseInt(p[2]);
+  if (d < 1 || d > 31 || m < 1 || m > 12 || y < 2024) return false;
+  return true;
+}
+
+// ─────────────────────────────────────
+// LOCATION PRICE DISPLAY
+// ─────────────────────────────────────
+function updateLocPrice() {
+  const pId = document.getElementById('pickupSelect').value;
+  const dId = document.getElementById('dropoffSelect').value;
+  const box = document.getElementById('locPriceDisplay');
+  if (pId && dId && locations[pId] && locations[dId]) {
+    const pPrice = parseFloat(locations[pId].price || 0);
+    const dPrice = parseFloat(locations[dId].price || 0);
+    const total = pPrice + dPrice;
+    document.getElementById('locPriceAmount').innerText = total > 0 ? 'RM ' + total.toFixed(2) : 'Contact for Quote';
+    document.getElementById('locPriceNote').innerText = locations[pId].name + ' → ' + locations[dId].name;
+    box.style.display = 'block';
+    selectedPickup = pId;
+    selectedDropoff = dId;
+  } else {
+    box.style.display = 'none';
+  }
+}
+
 function initApp() {
-  // Set min date to today
-  document.getElementById('pickupDate').min = new Date().toISOString().split('T')[0];
+  // Date input formatting
+  document.getElementById('pickupDate').addEventListener('input', formatDateInput);
 
   db.ref('ez_settings').on('value', snap => {
-    settings = snap.val() || { wa1: DEFAULT_WA1, wa2: DEFAULT_WA2, maxPax: 16, termsText: "I agree to the Terms & Conditions of My-Easytransport.com" };
+    settings = snap.val() || { wa1: DEFAULT_WA1, wa2: DEFAULT_WA2, maxPax: 16, termsText: "I agree to the Terms & Conditions of My-Easytransport.com", termsLink: "" };
     renderPassengerOptions();
     document.getElementById('termsLabel').innerText = settings.termsText || "I agree to the Terms & Conditions of My-Easytransport.com";
+    // Terms link
+    const linkEl = document.getElementById('termsLinkEl');
+    if (settings.termsLink) { linkEl.href = settings.termsLink; linkEl.style.display = 'inline-flex'; }
+    else { linkEl.style.display = 'none'; }
     // Sync admin fields
     if (document.getElementById('confWA1')) {
       document.getElementById('confWA1').value = settings.wa1 || DEFAULT_WA1;
       document.getElementById('confWA2').value = settings.wa2 || DEFAULT_WA2;
       document.getElementById('confMaxPax').value = settings.maxPax || 16;
       document.getElementById('confTermsText').value = settings.termsText || "";
+      document.getElementById('confTermsLink').value = settings.termsLink || "";
     }
   });
 
@@ -1039,38 +1181,22 @@ function renderPassengerOptions() {
 }
 
 // ─────────────────────────────────────
-// LOCATION GRIDS
+// LOCATION DROPDOWNS
 // ─────────────────────────────────────
 function renderLocationGrids() {
   const keys = Object.keys(locations);
-  const makeCard = (id, type) => {
-    const loc = locations[id];
-    const sel = type === 'pickup' ? selectedPickup : selectedDropoff;
-    return `<div class="loc-card ${sel === id ? 'selected' : ''}" onclick="selectLoc('${id}','${type}')">
-      <div class="loc-dot"></div>
-      <div>
-        <div class="loc-name">${loc.name}</div>
-        ${loc.zone ? `<div class="loc-price">${loc.zone}</div>` : ''}
-      </div>
-    </div>`;
-  };
+  const baseOpts = '<option value="">-- Select --</option>';
+  const opts = keys.map(id => {
+    const l = locations[id];
+    const priceStr = l.price && parseFloat(l.price) > 0 ? ` (RM ${parseFloat(l.price).toFixed(2)})` : '';
+    return `<option value="${id}">${l.name}${priceStr}</option>`;
+  }).join('');
 
-  const pickupGrid = document.getElementById('pickupGrid');
-  const dropoffGrid = document.getElementById('dropoffGrid');
-
-  if (!keys.length) {
-    pickupGrid.innerHTML = '<div class="loc-empty">No locations available yet.</div>';
-    dropoffGrid.innerHTML = '<div class="loc-empty">No locations available yet.</div>';
-    return;
-  }
-  pickupGrid.innerHTML = keys.map(id => makeCard(id, 'pickup')).join('');
-  dropoffGrid.innerHTML = keys.map(id => makeCard(id, 'dropoff')).join('');
-}
-
-function selectLoc(id, type) {
-  if (type === 'pickup') selectedPickup = id;
-  else selectedDropoff = id;
-  renderLocationGrids();
+  const ps = document.getElementById('pickupSelect');
+  const ds = document.getElementById('dropoffSelect');
+  if (ps) { ps.innerHTML = baseOpts + opts; if (selectedPickup) ps.value = selectedPickup; }
+  if (ds) { ds.innerHTML = baseOpts + opts; if (selectedDropoff) ds.value = selectedDropoff; }
+  updateLocPrice();
 }
 
 // ─────────────────────────────────────
@@ -1142,14 +1268,10 @@ function changeQty(id, delta) {
 function goStep(n) {
   // Validate step 1
   if (n > 1) {
-    const name = document.getElementById('custName').value.trim();
-    const phone = document.getElementById('custPhone').value.trim();
     const pax = document.getElementById('custPax').value;
     const date = document.getElementById('pickupDate').value;
-    if (!name) { showToast('⚠️ Please enter your name'); return; }
-    if (!phone) { showToast('⚠️ Please enter your phone number'); return; }
     if (!pax) { showToast('⚠️ Please select number of passengers'); return; }
-    if (!date) { showToast('⚠️ Please select a pickup date'); return; }
+    if (!date || !isValidDate(date)) { showToast('⚠️ Please enter a valid date (DD/MM/YYYY)'); return; }
     if (!selectedPickup) { showToast('⚠️ Please select a pickup location'); return; }
     if (!selectedDropoff) { showToast('⚠️ Please select a drop-off location'); return; }
   }
@@ -1175,6 +1297,23 @@ function goStep(n) {
 // ─────────────────────────────────────
 // SUMMARY
 // ─────────────────────────────────────
+function calcTotal() {
+  const pLocPrice = parseFloat(locations[selectedPickup]?.price || 0);
+  const dLocPrice = parseFloat(locations[selectedDropoff]?.price || 0);
+  let base = pLocPrice + dLocPrice;
+  // Add vehicle base price if numeric
+  const vPrice = vehicles[selectedVehicle]?.priceNum || 0;
+  base += vPrice;
+  // Addons
+  Object.keys(addonQtys).forEach(id => {
+    if (addonQtys[id] > 0 && addons[id]?.price) base += parseFloat(addons[id].price) * addonQtys[id];
+  });
+  // Payment surcharge
+  let tax = 0;
+  if (selectedPayment === 'paypal') tax = base * 0.06;
+  return { base, tax, total: base + tax };
+}
+
 function renderSummary() {
   const pickup = locations[selectedPickup]?.name || 'N/A';
   const dropoff = locations[selectedDropoff]?.name || 'N/A';
@@ -1182,33 +1321,44 @@ function renderSummary() {
   const date = document.getElementById('pickupDate').value;
   const time = document.getElementById('pickupTime').value;
   const pax = document.getElementById('custPax').value;
-  const name = document.getElementById('custName').value;
-  const phone = document.getElementById('custPhone').value;
   const note = document.getElementById('custNote').value;
+  const payLabels = { qr: '🏦 QR / Bank Transfer', paypal: '🌐 PayPal (+6% fee)', wise: '💸 Wise Payment' };
 
-  // Addons
+  // Addons lines
   const addonLines = Object.keys(addonQtys)
     .filter(id => addonQtys[id] > 0)
-    .map(id => `<div class="sum-row"><span class="sum-label">+ ${addons[id]?.name}</span><span class="sum-val">${addonQtys[id]}x</span></div>`)
-    .join('');
+    .map(id => {
+      const cost = addonQtys[id] * parseFloat(addons[id]?.price || 0);
+      return `<div class="sum-row"><span class="sum-label">✨ ${addons[id]?.name} x${addonQtys[id]}</span><span class="sum-val">${cost > 0 ? 'RM ' + cost.toFixed(2) : addonQtys[id] + 'x'}</span></div>`;
+    }).join('');
+
+  const totals = calcTotal();
+  const pLocPrice = parseFloat(locations[selectedPickup]?.price || 0);
+  const dLocPrice = parseFloat(locations[selectedDropoff]?.price || 0);
+  const routePrice = pLocPrice + dLocPrice;
 
   document.getElementById('summaryContent').innerHTML = `
-    <div class="sum-row"><span class="sum-label">👤 Name</span><span class="sum-val">${name}</span></div>
-    <div class="sum-row"><span class="sum-label">📞 Phone</span><span class="sum-val">${phone}</span></div>
     <div class="sum-row"><span class="sum-label">👥 Passengers</span><span class="sum-val">${pax}</span></div>
     <div class="sum-row"><span class="sum-label">📅 Date & Time</span><span class="sum-val gold">${date} · ${time}</span></div>
     <div class="sum-row"><span class="sum-label">📍 Pickup</span><span class="sum-val">${pickup}</span></div>
     <div class="sum-row"><span class="sum-label">🏁 Drop-off</span><span class="sum-val">${dropoff}</span></div>
+    ${routePrice > 0 ? `<div class="sum-row"><span class="sum-label">🛣️ Route Price</span><span class="sum-val">RM ${routePrice.toFixed(2)}</span></div>` : ''}
     <div class="sum-row"><span class="sum-label">🚘 Vehicle</span><span class="sum-val gold">${vehicle}</span></div>
     ${addonLines}
+    <div class="sum-row"><span class="sum-label">💳 Payment</span><span class="sum-val">${payLabels[selectedPayment] || 'QR / Bank Transfer'}</span></div>
+    ${totals.tax > 0 ? `<div class="sum-row"><span class="sum-label">📊 PayPal Fee (6%)</span><span class="sum-val">RM ${totals.tax.toFixed(2)}</span></div>` : ''}
+    ${totals.total > 0 ? `<div class="sum-row" style="border-top:1px solid rgba(255,255,255,0.15);margin-top:8px;padding-top:12px"><span class="sum-label" style="color:var(--gold-light);font-size:0.8rem">💰 ESTIMATED TOTAL</span><span class="sum-val" style="color:var(--gold-light);font-family:Fraunces,serif;font-size:1.2rem">RM ${totals.total.toFixed(2)}</span></div>` : ''}
     ${note ? `<div class="sum-row"><span class="sum-label">📝 Notes</span><span class="sum-val">${note}</span></div>` : ''}
   `;
   document.getElementById('termsCheck').checked = false;
+  document.getElementById('termsWrap').classList.remove('agreed');
   toggleSendBtn();
 }
 
 function toggleSendBtn() {
-  document.getElementById('btnSendWA').disabled = !document.getElementById('termsCheck').checked;
+  const checked = document.getElementById('termsCheck').checked;
+  document.getElementById('btnSendWA').disabled = !checked;
+  document.getElementById('termsWrap').classList.toggle('agreed', checked);
 }
 
 // ─────────────────────────────────────
@@ -1223,30 +1373,43 @@ function sendWA() {
   const vehicle = vehicles[selectedVehicle]?.name || 'N/A';
   const date = document.getElementById('pickupDate').value;
   const time = document.getElementById('pickupTime').value;
+  const pax = document.getElementById('custPax').value;
+  const payLabels = { qr: 'QR / Bank Transfer', paypal: 'PayPal (+6% fee)', wise: 'Wise Payment' };
+
+  const pLocPrice = parseFloat(locations[selectedPickup]?.price || 0);
+  const dLocPrice = parseFloat(locations[selectedDropoff]?.price || 0);
+  const routePrice = pLocPrice + dLocPrice;
 
   const addonText = Object.keys(addonQtys)
     .filter(id => addonQtys[id] > 0)
-    .map(id => `   • ${addonQtys[id]}x ${addons[id]?.name}`)
-    .join('\n');
+    .map(id => {
+      const cost = addonQtys[id] * parseFloat(addons[id]?.price || 0);
+      return `   • ${addonQtys[id]}x ${addons[id]?.name}${cost > 0 ? ' (RM ' + cost.toFixed(2) + ')' : ''}`;
+    }).join('\n');
+
+  const totals = calcTotal();
 
   const msg =
 `🚗 *NEW BOOKING — My-Easytransport.com*
 ━━━━━━━━━━━━━━━━━━━━━━━━
 
-👤 *Customer Details*
-   Name: ${document.getElementById('custName').value}
-   Phone: ${document.getElementById('custPhone').value}
-   Passengers: ${document.getElementById('custPax').value}
+👥 Passengers: ${pax}
 
 📅 *Trip Details*
    Date: ${date}
    Time: ${time}
    Pickup: ${pickup}
    Drop-off: ${dropoff}
+${routePrice > 0 ? `   Route Price: RM ${routePrice.toFixed(2)}` : ''}
 
-🚘 *Vehicle Selected*
+🚘 *Vehicle*
    ${vehicle}
 ${addonText ? `\n✨ *Add-ons*\n${addonText}` : ''}
+💳 *Payment Method*
+   ${payLabels[selectedPayment] || 'QR / Bank Transfer'}
+${totals.tax > 0 ? `   PayPal Fee (6%): RM ${totals.tax.toFixed(2)}` : ''}
+${totals.total > 0 ? `\n💰 *ESTIMATED TOTAL: RM ${totals.total.toFixed(2)}*` : ''}
+
 📝 *Notes*
    ${document.getElementById('custNote').value || 'None'}
 
@@ -1335,7 +1498,8 @@ function saveLoc() {
   if (!name) { showToast('⚠️ Location name required'); return; }
   db.ref('ez_locations/' + id).set({
     name,
-    zone: document.getElementById('locZone').value || ''
+    zone: document.getElementById('locZone').value || '',
+    price: parseFloat(document.getElementById('locPrice').value) || 0
   }).then(() => { cancelLoc(); showToast('✅ Location saved'); });
 }
 function editLoc(id) {
@@ -1343,10 +1507,11 @@ function editLoc(id) {
   document.getElementById('editLocId').value = id;
   document.getElementById('locName').value = l.name || '';
   document.getElementById('locZone').value = l.zone || '';
+  document.getElementById('locPrice').value = l.price || '';
   document.getElementById('btnCancelLoc').style.display = 'flex';
 }
 function cancelLoc() {
-  ['editLocId','locName','locZone'].forEach(id => document.getElementById(id).value = '');
+  ['editLocId','locName','locZone','locPrice'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('btnCancelLoc').style.display = 'none';
 }
 function renderAdminLocations() {
@@ -1357,7 +1522,7 @@ function renderAdminLocations() {
     <div class="admin-item">
       <div class="admin-item-info">
         <strong>${locations[id].name}</strong>
-        <span>${locations[id].zone || 'No zone info'}</span>
+        <span>${locations[id].zone || ''} ${locations[id].price ? '· RM ' + parseFloat(locations[id].price).toFixed(2) : ''}</span>
       </div>
       <div class="admin-btns">
         <button class="btn btn-edit btn-sm" onclick="editLoc('${id}')">Edit</button>
@@ -1412,7 +1577,8 @@ function saveSettings() {
     wa1: document.getElementById('confWA1').value.trim() || DEFAULT_WA1,
     wa2: document.getElementById('confWA2').value.trim() || DEFAULT_WA2,
     maxPax: parseInt(document.getElementById('confMaxPax').value) || 16,
-    termsText: document.getElementById('confTermsText').value.trim() || "I agree to the Terms & Conditions of My-Easytransport.com"
+    termsText: document.getElementById('confTermsText').value.trim() || "I agree to the Terms & Conditions of My-Easytransport.com",
+    termsLink: document.getElementById('confTermsLink').value.trim() || ""
   }).then(() => showToast('✅ Settings updated'));
 }
 
